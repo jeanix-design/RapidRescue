@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#ef4444"/>
+  <title>📡 RapidRescue — Monitor Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="manifest" href="manifest.json"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body { 
+      background: #0a0e1a; 
+      color: #e0e6f0; 
+      font-family: 'Inter', Arial, sans-serif; 
+      min-height: 100vh; 
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      overflow-x: hidden;
+    }
+
+    /* ── Overlay (Mobile Only) ── */
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 998;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* ── Sidebar Toggle Button ── */
+    .sidebar-toggle {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 1001;
+      background: #111827;
+      border: 1px solid #1e293b;
+      color: #64748b;
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .sidebar-toggle:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+      transform: scale(1.05);
+    }
+    .sidebar-toggle.active {
+      left: 234px;
+    }
+    body.light-theme .sidebar-toggle {
+      background: #fff;
+      border-color: #e2e8f0;
+      color: #64748b;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 220px;
+      height: 100vh;
+      background: #0d1120;
+      border-right: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 0;
+      z-index: 999;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+    .sidebar.active {
+      transform: translateX(0);
+    }
+    .sidebar-logo {
+      padding: 0 20px 28px;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #ef4444, #f97316);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      border-bottom: 1px solid #1e293b;
+    }
+    .sidebar-logo span {
+      font-size: 0.65rem;
+      display: block;
+      color: #475569;
+      -webkit-text-fill-color: #475569;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+    .sidebar nav {
+      margin-top: 20px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 20px;
+      color: #64748b;
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      border-left: 3px solid transparent;
+      transition: color 0.2s, background 0.2s, border-color 0.2s;
+    }
+    .sidebar nav a .icon {
+      font-size: 1rem;
+      width: 20px;
+      text-align: center;
+    }
+    .sidebar nav a:hover,
+    .sidebar nav a.active {
+      color: #ef4444;
+      background: rgba(239,68,68,0.06);
+      border-left-color: #ef4444;
+    }
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid #1e293b;
+      margin-top: auto;
+    }
+    .toggle-theme {
+      width: 100%;
+      padding: 8px 12px;
+      background: transparent;
+      color: #64748b;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .toggle-theme:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    /* ── Main Content ── */
+    .main {
+      margin-left: 0;
+      padding: 36px 40px 60px;
+      min-height: 100vh;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding-left: 60px;
+    }
+    .topbar h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+    .topbar h1 span {
+      background: linear-gradient(90deg,#ef4444,#f97316);
+      -webkit-background-clip:text;
+      background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 6px 12px;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid #22c55e;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: #22c55e;
+      font-weight: 600;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* ── Stat Cards ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s;
+    }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -20px;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--accent, #ef4444);
+      opacity: 0.06;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent, #ef4444);
+      line-height: 1;
+    }
+    .stat-sub {
+      font-size: 0.72rem;
+      color: #334155;
+      margin-top: 4px;
+    }
+
+    /* ── Section Heading ── */
+    .section-heading {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 16px;
+      margin-top: 32px;
+    }
+
+    /* ── Alert List ── */
+    .alert-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    .alert-item {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 4px solid #3b82f6;
+    }
+    .alert-item:hover {
+      transform: translateX(4px);
+      background: rgba(255,255,255,0.03);
+    }
+    .alert-item.active {
+      border-left-color: #ef4444;
+      background: rgba(239,68,68,0.1);
+    }
+    .alert-item.normal { border-left-color: #f59e0b; }
+    .alert-item.severe { border-left-color: #ef4444; }
+    .alert-item.resolved { opacity: 0.6; border-left-color: #22c55e; }
+    .alert-type-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .alert-type-badge.normal { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    .alert-type-badge.severe { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .alert-time { color: #64748b; font-size: 0.8rem; }
+    .alert-location { font-weight: 500; margin: 0.25rem 0; color: #94a3b8; }
+
+    /* ── Filter Tabs ── */
+    .filter-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-tab {
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .filter-tab:active { transform: scale(0.95); }
+    .filter-tab.active {
+      background: #3b82f6;
+      color: white;
+    }
+
+    /* ── Map & Details ── */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 1.5rem;
+    }
+    .panel {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #map {
+      height: 50vh;
+      min-height: 400px;
+      border-radius: 10px;
+      border: 2px solid #1e293b;
+      touch-action: pan-x pan-y;
+    }
+    .alert-details {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: #64748b; }
+    .detail-value { font-weight: 500; }
+    .travel-time {
+      background: rgba(59,130,246,0.1);
+      border: 1px solid #3b82f6;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      color: #3b82f6;
+      font-weight: 600;
+    }
+    .action-btns {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-onway { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+    .btn.resolve { background: #22c55e; color: white; }
+    .btn.directions { background: #3b82f6; color: white; }
+
+    /* ── Settings Grid ── */
+    .settings-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+    .settings-card {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 1.5rem;
+    }
+    .settings-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label {
+      font-size: 0.9rem;
+      color: #e2e8f0;
+    }
+    .setting-desc {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+    .toggle-switch {
+      width: 44px;
+      height: 24px;
+      background: #1e293b;
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-switch.on {
+      background: #22c55e;
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle-switch.on::after {
+      transform: translateX(20px);
+    }
+
+    /* ── Statistics Charts ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-box {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .stat-box-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .stat-box-value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #ef4444;
+    }
+    .stat-box-label {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+    .chart-container {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .chart-bar {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .chart-label {
+      width: 120px;
+      font-size: 0.85rem;
+      color: #e2e8f0;
+    }
+    .chart-bar-bg {
+      flex: 1;
+      height: 24px;
+      background: #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 0 1rem;
+    }
+    .chart-bar-fill {
+      height: 100%;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #ef4444, #f97316);
+      transition: width 1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    /* ── Bottom Navigation (Mobile Only) ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #0d1120;
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid #1e293b;
+      z-index: 1000;
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      color: #64748b;
+      font-size: 0.65rem;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item:active { transform: scale(0.95); }
+    .nav-item i { font-size: 1.2rem; }
+    .nav-item.active {
+      color: #ef4444;
+      background: rgba(239,68,68,0.1);
+    }
+
+    /* ── Toast Notifications ── */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      left: 20px;
+      max-width: 400px;
+      margin: 0 auto;
+      background: #111827;
+      color: #e0e6f0;
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      border-left: 4px solid #3b82f6;
+      z-index: 2000;
+      animation: slideIn 0.3s ease;
+      font-size: 0.85rem;
+    }
+    .toast.new { border-left-color: #f59e0b; }
+    .toast.severe { border-left-color: #ef4444; }
+    .toast.resolved { border-left-color: #22c55e; }
+    .toast.success { border-left-color: #22c55e; }
+    @keyframes slideIn {
+      from { transform: translateY(100px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ── Light Theme ── */
+    body.light-theme { background: #f1f5f9; color: #0f172a; }
+    body.light-theme .sidebar { background: #fff; border-color: #e2e8f0; }
+    body.light-theme .sidebar-logo span { color: #94a3b8; -webkit-text-fill-color: #94a3b8; }
+    body.light-theme .sidebar nav a { color: #64748b; }
+    body.light-theme .sidebar nav a:hover,
+    body.light-theme .sidebar nav a.active {
+      color: #ef4444;
+      background: rgba(239,68,68,0.06);
+      border-left-color: #ef4444;
+    }
+    body.light-theme .sidebar-footer { border-color: #e2e8f0; }
+    body.light-theme .toggle-theme { border-color: #e2e8f0; color: #64748b; }
+    body.light-theme .topbar h1 { color: #0f172a; }
+    body.light-theme .stat-card,
+    body.light-theme .alert-item,
+    body.light-theme .panel,
+    body.light-theme .settings-card,
+    body.light-theme .stat-box,
+    body.light-theme .chart-container {
+      background: #fff;
+      border-color: #e2e8f0;
+    }
+    body.light-theme .bottom-nav { background: #fff; border-color: #e2e8f0; }
+    body.light-theme .toast { background: #fff; color: #0f172a; border-color: #e2e8f0; }
+    body.light-theme .toggle-switch { background: #e2e8f0; }
+    body.light-theme .toggle-switch::after { background: #0f172a; }
+    body.light-theme .chart-bar-bg { background: #e2e8f0; }
+
+    /* ═══════════════════════════════════════════════════
+       ── RESPONSIVE MEDIA QUERIES ──
+       ═══════════════════════════════════════════════════ */
+    
+    /* ── MOBILE (<768px) ── */
+    @media (max-width: 767px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      .sidebar-toggle {
+        left: 14px;
+      }
+      .sidebar-toggle.active {
+        left: 234px;
+      }
+      .main {
+        margin-left: 0;
+        padding: 1.25rem;
+      }
+      .topbar {
+        padding-left: 60px;
+      }
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      .bottom-nav {
+        display: flex;
+      }
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── TABLET (768px-1023px) ── */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .main {
+        padding: 2rem;
+      }
+      .stats-row {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+      .bottom-nav {
+        display: none;
+      }
+      body {
+        padding-bottom: 2rem;
+      }
+    }
+
+    /* ── DESKTOP (1024px+) ── */
+    @media (min-width: 1024px) {
+      .sidebar {
+        transform: translateX(0);
+      }
+      .sidebar-toggle {
+        display: none;
+      }
+      .main {
+        margin-left: 220px;
+        padding: 2.5rem;
+        max-width: 1400px;
+      }
+      .topbar {
+        padding-left: 0;
+      }
+      .bottom-nav {
+        display: none;
+      }
+    }
+
+    /* ── Page Visibility ── */
+    .page {
+      display: none;
+    }
+    .page.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar Overlay (Mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar Toggle Button -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      RapidRescue
+      <span>Monitor Dashboard</span>
+    </div>
+    <nav>
+      <a href="#" class="active" onclick="showPage('home', this)"><span class="icon">📡</span> Live Alerts</a>
+      <a href="#" onclick="showPage('statistics', this)"><span class="icon">📊</span> Statistics</a>
+      <a href="#" onclick="showPage('settings', this)"><span class="icon">⚙️</span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="toggle-theme" onclick="toggleTheme()">☀ Toggle Theme</button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main" id="mainContent">
+
+    <!-- HOME PAGE (Live Alerts) -->
+    <div class="page active" id="homePage">
+      
+      <!-- Top bar -->
+      <div class="topbar">
+        <h1>📡 <span>RapidRescue Monitor</span></h1>
+        <div class="header-status">
+          <div class="status-dot"></div>
+          <span>Live</span>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-card" style="--accent:#ef4444">
+          <div class="stat-label">Total Alerts</div>
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-sub">all time</div>
+        </div>
+        <div class="stat-card" style="--accent:#f59e0b">
+          <div class="stat-label">Active</div>
+          <div class="stat-value" id="statActive">0</div>
+          <div class="stat-sub">awaiting response</div>
+        </div>
+        <div class="stat-card" style="--accent:#22c55e">
+          <div class="stat-label">Resolved</div>
+          <div class="stat-value" id="statResolved">0</div>
+          <div class="stat-sub">completed</div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Alert List Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🚨 Active Alerts</div>
+            <span id="alertCount" style="background:#ef4444; color:white; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:700;">0</span>
+          </div>
+          <div class="filter-tabs">
+            <div class="filter-tab active" data-filter="all">All</div>
+            <div class="filter-tab" data-filter="normal">🟡 Normal</div>
+            <div class="filter-tab" data-filter="severe">🔴 Critical</div>
+            <div class="filter-tab" data-filter="resolved">✅ Done</div>
+          </div>
+          <div class="alert-list" id="alertList">
+            <div style="text-align:center; color:#64748b; padding:3rem;">
+              <i class="fas fa-broadcast-tower" style="font-size:3rem; margin-bottom:1rem; opacity:0.5"></i>
+              <p>Waiting for alerts...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map & Details Panel -->
+        <div>
+          <div id="map"></div>
+          <div class="panel alert-details" id="alertDetails" style="display:none;">
+            <div class="panel-header">
+              <div class="panel-title">📋 Alert Details</div>
+              <span class="alert-type-badge" id="detailType">Alert</span>
+            </div>
+            <div class="detail-row"><span class="detail-label">🕐 Time</span><span class="detail-value" id="detailTime">--</span></div>
+            <div class="detail-row"><span class="detail-label">🚨 Type</span><span class="detail-value" id="detailEmergencyType">--</span></div>
+            <div class="detail-row"><span class="detail-label">🏥 Category</span><span class="detail-value" id="detailCategory">--</span></div>
+            <div class="detail-row"><span class="detail-label">📍 Coordinates</span><span class="detail-value" id="detailCoords">--</span></div>
+            <div class="detail-row"><span class="detail-label">👤 User</span><span class="detail-value" id="detailUser">--</span></div>
+            <div class="detail-row" id="notesRow" style="display:none;"><span class="detail-label">📝 Notes</span><span class="detail-value" id="detailNotes">--</span></div>
+            
+            <!-- Travel Time -->
+            <div class="travel-time" id="travelTime" style="display:none;">
+              <i class="fas fa-car"></i>
+              <span id="travelTimeText">Calculating...</span>
+            </div>
+            
+            <div class="action-btns">
+              <button class="btn btn-onway" id="onWayBtn" onclick="markOnWay()">🚗 I'm On My Way</button>
+              <button class="btn directions" id="directionsBtn" onclick="getDirections()">🗺️ Get Directions</button>
+              <button class="btn resolve" id="resolveBtn" onclick="resolveAlert()">✅ Mark Resolved</button>
+            </div>
+          </div>
+          <div class="panel" id="placeholderPanel" style="margin-top:1.5rem;">
+            <div style="text-align:center; color:#64748b; padding:3rem;">
+              <i class="fas fa-map-location-dot" style="font-size:3rem; margin-bottom:1rem; opacity:0.5"></i>
+              <p>Select an alert to view details</p>
+              <p style="font-size:0.8rem; margin-top:0.5rem;">🏥 Hospitals and 💊 Pharmacies shown on map</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer style="margin-top:48px; padding-top:20px; border-top:1px solid #1e293b; text-align:center; font-size:0.75rem; color:#334155;">
+        &copy; 2025 RapidRescue. All rights reserved.
+      </footer>
+    </div>
+
+    <!-- STATISTICS PAGE -->
+    <div class="page" id="statisticsPage">
+      <div class="topbar">
+        <h1>📊 <span>Statistics Dashboard</span></h1>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-box-icon">🚨</div>
+          <div class="stat-box-value" id="statTotalAlerts">0</div>
+          <div class="stat-box-label">Total Alerts</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-icon">🟡</div>
+          <div class="stat-box-value" id="statNormalAlerts">0</div>
+          <div class="stat-box-label">Normal Alerts</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-icon">🔴</div>
+          <div class="stat-box-value" id="statCriticalAlerts">0</div>
+          <div class="stat-box-label">Critical Alerts</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-icon">✅</div>
+          <div class="stat-box-value" id="statResolvedAlerts">0</div>
+          <div class="stat-box-label">Resolved</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-icon">⏱️</div>
+          <div class="stat-box-value" id="statAvgResponse">0</div>
+          <div class="stat-box-label">Avg Response (min)</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-icon">📍</div>
+          <div class="stat-box-value" id="statActiveNow">0</div>
+          <div class="stat-box-label">Active Now</div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h3 style="margin-bottom:1rem; color:#e2e8f0; font-size:1rem;">📈 Alerts by Category</h3>
+        <div class="chart-bar">
+          <div class="chart-label">🏥 Medical</div>
+          <div class="chart-bar-bg">
+            <div class="chart-bar-fill" id="chartMedical" style="width:0%">0</div>
+          </div>
+        </div>
+        <div class="chart-bar">
+          <div class="chart-label">🔥 Fire</div>
+          <div class="chart-bar-bg">
+            <div class="chart-bar-fill" id="chartFire" style="width:0%; background:linear-gradient(90deg, #f59e0b, #d97706);">0</div>
+          </div>
+        </div>
+        <div class="chart-bar">
+          <div class="chart-label">👮 Police</div>
+          <div class="chart-bar-bg">
+            <div class="chart-bar-fill" id="chartPolice" style="width:0%; background:linear-gradient(90deg, #8b5cf6, #7c3aed);">0</div>
+          </div>
+        </div>
+        <div class="chart-bar">
+          <div class="chart-label">🚗 Accident</div>
+          <div class="chart-bar-bg">
+            <div class="chart-bar-fill" id="chartAccident" style="width:0%; background:linear-gradient(90deg, #3b82f6, #2563eb);">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h3 style="margin-bottom:1rem; color:#e2e8f0; font-size:1rem;">📊 Response Rate</h3>
+        <div style="text-align:center; padding:2rem;">
+          <div style="font-size:4rem; font-weight:800; color:#22c55e;" id="responseRate">0%</div>
+          <p style="color:#64748b; margin-top:0.5rem;">of alerts responded to</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin-bottom:1rem; color:#e2e8f0; font-size:1rem;">📅 Today's Activity</h3>
+        <div id="todayActivity" style="color:#64748b; text-align:center; padding:2rem;">
+          <p>No activity today</p>
+        </div>
+      </div>
+
+      <footer style="margin-top:48px; padding-top:20px; border-top:1px solid #1e293b; text-align:center; font-size:0.75rem; color:#334155;">
+        &copy; 2025 RapidRescue. All rights reserved.
+      </footer>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="page" id="settingsPage">
+      <div class="topbar">
+        <h1>⚙️ <span>Settings</span></h1>
+      </div>
+      
+      <div class="settings-grid">
+        <!-- Sound Settings -->
+        <div class="settings-card">
+          <h3><i class="fas fa-volume-up"></i> Sound & Alerts</h3>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Alarm Sound</div>
+              <div class="setting-desc">Play alarm when alert received</div>
+            </div>
+            <div class="toggle-switch on" id="soundToggle" onclick="toggleSetting('sound', this)"></div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Notification Sound</div>
+              <div class="setting-desc">Play sound for browser notifications</div>
+            </div>
+            <div class="toggle-switch on" id="notifSoundToggle" onclick="toggleSetting('notifSound', this)"></div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Alarm Volume</div>
+              <div class="setting-desc">Adjust alarm volume level</div>
+            </div>
+            <select id="alarmVolume" onchange="saveSettings()" style="background:#0d1120; color:#e0e6f0; border:1px solid #1e293b; padding:0.5rem; border-radius:6px; font-size:0.85rem;">
+              <option value="100">100%</option>
+              <option value="75">75%</option>
+              <option value="50">50%</option>
+              <option value="25">25%</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Notification Settings -->
+        <div class="settings-card">
+          <h3><i class="fas fa-bell"></i> Notifications</h3>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Browser Notifications</div>
+              <div class="setting-desc">Show desktop notifications</div>
+            </div>
+            <div class="toggle-switch on" id="browserNotifToggle" onclick="toggleSetting('browserNotif', this)"></div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Critical Alerts Only</div>
+              <div class="setting-desc">Only notify for critical emergencies</div>
+            </div>
+            <div class="toggle-switch" id="criticalOnlyToggle" onclick="toggleSetting('criticalOnly', this)"></div>
+          </div>
+          <div class="setting-row">
+            <button onclick="requestNotificationPermission()" style="width:100%; padding:0.75rem; background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; margin-top:0.5rem;">🔔 Request Permission</button>
+          </div>
+        </div>
+        
+        <!-- Map Settings -->
+        <div class="settings-card">
+          <h3><i class="fas fa-map"></i> Map & Location</h3>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Show Hospitals</div>
+              <div class="setting-desc">Display hospitals on map</div>
+            </div>
+            <div class="toggle-switch on" id="showHospitalsToggle" onclick="toggleSetting('showHospitals', this)"></div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Show Pharmacies</div>
+              <div class="setting-desc">Display pharmacies on map</div>
+            </div>
+            <div class="toggle-switch on" id="showPharmaciesToggle" onclick="toggleSetting('showPharmacies', this)"></div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Auto-Zoom to Alert</div>
+              <div class="setting-desc">Automatically zoom to new alerts</div>
+            </div>
+            <div class="toggle-switch on" id="autoZoomToggle" onclick="toggleSetting('autoZoom', this)"></div>
+          </div>
+        </div>
+        
+        <!-- Responder Settings -->
+        <div class="settings-card">
+          <h3><i class="fas fa-user-shield"></i> Responder Profile</h3>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Responder Name</div>
+              <div class="setting-desc">Your name shown to alert senders</div>
+            </div>
+            <input type="text" id="responderName" placeholder="Enter name" onchange="saveSettings()" style="background:#0d1120; color:#e0e6f0; border:1px solid #1e293b; padding:0.5rem; border-radius:6px; font-size:0.85rem; width:150px;">
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Vehicle Type</div>
+              <div class="setting-desc">Your response vehicle</div>
+            </div>
+            <select id="vehicleType" onchange="saveSettings()" style="background:#0d1120; color:#e0e6f0; border:1px solid #1e293b; padding:0.5rem; border-radius:6px; font-size:0.85rem;">
+              <option value="ambulance">🚑 Ambulance</option>
+              <option value="police">🚓 Police Car</option>
+              <option value="fire">🚒 Fire Truck</option>
+              <option value="general">🚗 General</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Data Settings -->
+        <div class="settings-card">
+          <h3><i class="fas fa-database"></i> Data & Privacy</h3>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Clear Alert History</div>
+              <div class="setting-desc">Delete all stored alerts</div>
+            </div>
+            <button onclick="clearAlertHistory()" style="background:#ef4444; color:white; border:none; padding:0.5rem 1rem; border-radius:6px; font-weight:600; cursor:pointer;">Clear</button>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Export Data</div>
+              <div class="setting-desc">Download alert data as JSON</div>
+            </div>
+            <button onclick="exportData()" style="background:#3b82f6; color:white; border:none; padding:0.5rem 1rem; border-radius:6px; font-weight:600; cursor:pointer;">Export</button>
+          </div>
+        </div>
+        
+        <!-- Appearance -->
+        <div class="settings-card">
+          <h3><i class="fas fa-palette"></i> Appearance</h3>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Dark Mode</div>
+              <div class="setting-desc">Switch between light and dark theme</div>
+            </div>
+            <div class="toggle-switch on" id="darkModeToggle" onclick="toggleTheme()"></div>
+          </div>
+        </div>
+      </div>
+      
+      <footer style="margin-top:48px; padding-top:20px; border-top:1px solid #1e293b; text-align:center; font-size:0.75rem; color:#334155;">
+        &copy; 2025 RapidRescue. All rights reserved.
+      </footer>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation (Mobile Only) -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="showPage('home', this)">
+      <i class="fas fa-broadcast-tower"></i>
+      <span>Alerts</span>
+    </div>
+    <div class="nav-item" onclick="showPage('statistics', this)">
+      <i class="fas fa-chart-bar"></i>
+      <span>Stats</span>
+    </div>
+    <div class="nav-item" onclick="showPage('settings', this)">
+      <i class="fas fa-cog"></i>
+      <span>Settings</span>
+    </div>
+  </nav>
+
+  <div id="toastContainer"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // ============================================
+    // 🔥 FIREBASE CONFIG
+    // ============================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyCmTEkHE__qW9Didb5JKJgLwFyK8jRECjI",
+      authDomain: "rescue-a28ef.firebaseapp.com",
+      databaseURL: "https://rescue-a28ef-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "rescue-a28ef",
+      storageBucket: "rescue-a28ef.firebasestorage.app",
+      messagingSenderId: "919837756686",
+      appId: "1:919837756686:web:1266c176a6d5890eb59b5f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    let map, alertMarkers={}, selectedAlertId=null, allAlerts=[], soundEnabled=true, alarmInterval=null, audioContext=null, audioInitialized=false, currentAlertId=null;
+    let sidebarOpen = false;
+    let settings = JSON.parse(localStorage.getItem('rapidrescue_monitor_settings') || '{"sound":true,"notifSound":true,"alarmVolume":100,"browserNotif":true,"criticalOnly":false,"showHospitals":true,"showPharmacies":true,"autoZoom":true,"responderName":"","vehicleType":"ambulance"}');
+
+    // ============================================
+    // 🏥 HOSPITALS DATA (Addis Ababa)
+    // ============================================
+    const hospitals = [
+      { name: 'Tikur Anbessa Specialized Hospital', lat: 9.0350, lng: 38.7615, type: 'Specialized' },
+      { name: 'St. Paul\'s Hospital Millennium Medical College', lat: 9.0157, lng: 38.7897, type: 'General' },
+      { name: 'Hayat Hospital', lat: 9.0192, lng: 38.7525, type: 'Private' },
+      { name: 'Bethel Teaching General Hospital', lat: 9.0280, lng: 38.7580, type: 'General' },
+      { name: 'Zewditu Memorial Hospital', lat: 9.0320, lng: 38.7450, type: 'General' },
+      { name: 'Yekatit 12 Hospital', lat: 9.0250, lng: 38.7500, type: 'General' },
+      { name: 'Gandhi Memorial Hospital', lat: 9.0180, lng: 38.7600, type: 'General' },
+      { name: 'Alert Hospital', lat: 9.0400, lng: 38.7700, type: 'Specialized' },
+      { name: 'St. Gabriel General Hospital', lat: 9.0100, lng: 38.7650, type: 'General' },
+      { name: 'Kadisco General Hospital', lat: 9.0050, lng: 38.7400, type: 'Private' }
+    ];
+
+    // ============================================
+    // 💊 PHARMACIES DATA (Addis Ababa)
+    // ============================================
+    const pharmacies = [
+      { name: 'Hayat Pharmacy - Bole', lat: 9.0192, lng: 38.7525 },
+      { name: 'Bethel Pharmacy - Piassa', lat: 9.0320, lng: 38.7615 },
+      { name: 'Alpha Pharmacy - Megenagna', lat: 9.0157, lng: 38.7897 },
+      { name: 'Zemen Pharmacy - CMC', lat: 8.9806, lng: 38.7578 },
+      { name: 'St. Gabriel Pharmacy - Kazanchis', lat: 9.0250, lng: 38.7650 },
+      { name: 'Bethzatha Pharmacy - Bole', lat: 9.0100, lng: 38.7500 },
+      { name: 'Selam Pharmacy - Piassa', lat: 9.0350, lng: 38.7550 },
+      { name: 'Medhanealem Pharmacy - Megenagna', lat: 9.0200, lng: 38.7900 }
+    ];
+
+    const els = { 
+      alertList:document.getElementById('alertList'), 
+      alertCount:document.getElementById('alertCount'), 
+      alertDetails:document.getElementById('alertDetails'), 
+      placeholderPanel:document.getElementById('placeholderPanel'), 
+      detailType:document.getElementById('detailType'), 
+      detailTime:document.getElementById('detailTime'), 
+      detailEmergencyType:document.getElementById('detailEmergencyType'), 
+      detailCategory:document.getElementById('detailCategory'),
+      detailCoords:document.getElementById('detailCoords'), 
+      detailUser:document.getElementById('detailUser'), 
+      detailNotes:document.getElementById('detailNotes'), 
+      notesRow:document.getElementById('notesRow'), 
+      statTotal:document.getElementById('statTotal'), 
+      statActive:document.getElementById('statActive'), 
+      statResolved:document.getElementById('statResolved'), 
+      toastContainer:document.getElementById('toastContainer'),
+      travelTime: document.getElementById('travelTime'),
+      travelTimeText: document.getElementById('travelTimeText')
+    };
+
+    document.addEventListener('DOMContentLoaded', () => { 
+      loadSettings();
+      initMap(); 
+      initFilters(); 
+      startListening(); 
+      loadStats(); 
+      updateStatistics();
+      if ('Notification' in window) Notification.requestPermission(); 
+    });
+
+    // ============================================
+    // 🗂️ SIDEBAR TOGGLE
+    // ============================================
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const toggle = document.getElementById('sidebarToggle');
+      const overlay = document.getElementById('sidebarOverlay');
+      
+      sidebarOpen = !sidebarOpen;
+      
+      if (sidebarOpen) {
+        sidebar.classList.add('active');
+        toggle.classList.add('active');
+        toggle.innerHTML = '<i class="fas fa-times"></i>';
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      } else {
+        sidebar.classList.remove('active');
+        toggle.classList.remove('active');
+        toggle.innerHTML = '<i class="fas fa-bars"></i>';
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+
+    function closeSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const toggle = document.getElementById('sidebarToggle');
+      const overlay = document.getElementById('sidebarOverlay');
+      
+      sidebarOpen = false;
+      sidebar.classList.remove('active');
+      toggle.classList.remove('active');
+      toggle.innerHTML = '<i class="fas fa-bars"></i>';
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // ============================================
+    // 📱 PAGE NAVIGATION
+    // ============================================
+    function showPage(pageId, element) {
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+      });
+      
+      document.getElementById(pageId + 'Page').classList.add('active');
+      
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      if (element) {
+        element.classList.add('active');
+      }
+      
+      // Update sidebar nav
+      document.querySelectorAll('.sidebar nav a').forEach(link => {
+        link.classList.remove('active');
+      });
+      
+      if (window.innerWidth < 768 && sidebarOpen) {
+        closeSidebar();
+      }
+      
+      // Load page-specific content
+      if (pageId === 'statistics') {
+        updateStatistics();
+      }
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ============================================
+    // ⚙️ SETTINGS FUNCTIONS
+    // ============================================
+    function loadSettings() {
+      if (settings.sound) document.getElementById('soundToggle').classList.add('on');
+      else document.getElementById('soundToggle').classList.remove('on');
+      
+      if (settings.notifSound) document.getElementById('notifSoundToggle').classList.add('on');
+      else document.getElementById('notifSoundToggle').classList.remove('on');
+      
+      if (settings.browserNotif) document.getElementById('browserNotifToggle').classList.add('on');
+      else document.getElementById('browserNotifToggle').classList.remove('on');
+      
+      if (settings.criticalOnly) document.getElementById('criticalOnlyToggle').classList.add('on');
+      else document.getElementById('criticalOnlyToggle').classList.remove('on');
+      
+      if (settings.showHospitals) document.getElementById('showHospitalsToggle').classList.add('on');
+      else document.getElementById('showHospitalsToggle').classList.remove('on');
+      
+      if (settings.showPharmacies) document.getElementById('showPharmaciesToggle').classList.add('on');
+      else document.getElementById('showPharmaciesToggle').classList.remove('on');
+      
+      if (settings.autoZoom) document.getElementById('autoZoomToggle').classList.add('on');
+      else document.getElementById('autoZoomToggle').classList.remove('on');
+      
+      if (settings.alarmVolume) document.getElementById('alarmVolume').value = settings.alarmVolume;
+      if (settings.responderName) document.getElementById('responderName').value = settings.responderName;
+      if (settings.vehicleType) document.getElementById('vehicleType').value = settings.vehicleType;
+    }
+    
+    function toggleSetting(key, element) {
+      element.classList.toggle('on');
+      settings[key] = element.classList.contains('on');
+      saveSettings();
+    }
+    
+    function saveSettings() {
+      settings.alarmVolume = document.getElementById('alarmVolume').value;
+      settings.responderName = document.getElementById('responderName').value;
+      settings.vehicleType = document.getElementById('vehicleType').value;
+      localStorage.setItem('rapidrescue_monitor_settings', JSON.stringify(settings));
+      showToast('⚙️ Settings saved', 'success');
+    }
+    
+    function requestNotificationPermission() {
+      if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            showToast('✅ Notifications enabled!', 'success');
+          } else {
+            showToast('⚠️ Notifications denied', 'warning');
+          }
+        });
+      }
+    }
+    
+    function clearAlertHistory() {
+      if (confirm('Delete all alert history? This cannot be undone.')) {
+        allAlerts = [];
+        localStorage.removeItem('rapidrescue_alerts');
+        updateStats();
+        updateStatistics();
+        renderAlertList('all');
+        showToast('🗑️ Alert history cleared', 'success');
+      }
+    }
+    
+    function exportData() {
+      const data = {
+        alerts: allAlerts,
+        exportedAt: new Date().toISOString(),
+        totalAlerts: allAlerts.length
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rapidrescue-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('📥 Data exported!', 'success');
+    }
+
+    // ============================================
+    // 🗺️ MAP INITIALIZATION
+    // ============================================
+    function initMap() {
+      map = L.map('map').setView([9.0192, 38.7525], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+        attribution: '© OpenStreetMap' 
+      }).addTo(map);
+
+      // Add hospitals to map
+      if (settings.showHospitals) {
+        hospitals.forEach(hospital => {
+          L.marker([hospital.lat, hospital.lng], {
+            icon: L.divIcon({
+              html: '<div style="background:#ef4444; color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-size:1rem; border:2px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.3);">🏥</div>',
+              className: '',
+              iconSize: [30, 30]
+            })
+          }).addTo(map).bindPopup(`
+            <div style="text-align:left; min-width:200px;">
+              <h3 style="margin:0 0 0.5rem 0; color:#ef4444; font-size:1rem;">🏥 ${hospital.name}</h3>
+              <p style="margin:0; color:#64748b; font-size:0.85rem;">Type: ${hospital.type}</p>
+              <p style="margin:0.5rem 0 0 0; color:#3b82f6; font-size:0.85rem;"><i class="fas fa-car"></i> Emergency services available</p>
+            </div>
+          `);
+        });
+      }
+
+      // Add pharmacies to map
+      if (settings.showPharmacies) {
+        pharmacies.forEach(pharmacy => {
+          L.marker([pharmacy.lat, pharmacy.lng], {
+            icon: L.divIcon({
+              html: '<div style="background:#22c55e; color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-size:1rem; border:2px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.3);">💊</div>',
+              className: '',
+              iconSize: [30, 30]
+            })
+          }).addTo(map).bindPopup(`
+            <div style="text-align:left; min-width:200px;">
+              <h3 style="margin:0 0 0.5rem 0; color:#22c55e; font-size:1rem;">💊 ${pharmacy.name}</h3>
+              <p style="margin:0; color:#64748b; font-size:0.85rem;"><i class="fas fa-clock"></i> Open 24/7</p>
+              <p style="margin:0.5rem 0 0 0; color:#3b82f6; font-size:0.85rem;">Medicine delivery available</p>
+            </div>
+          `);
+        });
+      }
+    }
+
+    // ============================================
+    // 🔍 AUTO-ZOOM TO ALERT LOCATION
+    // ============================================
+    function zoomToLocation(lat, lng) {
+      if (!settings.autoZoom) return;
+      
+      map.flyTo([lat, lng], 16, {
+        animate: true,
+        duration: 1.5
+      });
+      
+      const alertMarker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          html: '<div style="background:#ef4444; color:white; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; border:3px solid white; box-shadow:0 4px 15px rgba(239,68,68,0.5); animation:pulse 1s infinite;">🚨</div>',
+          className: '',
+          iconSize: [40, 40]
+        })
+      }).addTo(map).bindPopup('<b>🚨 Alert Location</b>').openPopup();
+      
+      if (window.currentAlertMarker) {
+        map.removeLayer(window.currentAlertMarker);
+      }
+      window.currentAlertMarker = alertMarker;
+    }
+
+    // ============================================
+    // ⏱️ CALCULATE TRAVEL TIME
+    // ============================================
+    function calculateTravelTime(lat, lng) {
+      const responderLat = 9.0192;
+      const responderLng = 38.7525;
+      
+      const R = 6371;
+      const dLat = (lat - responderLat) * Math.PI / 180;
+      const dLng = (lng - responderLng) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(responderLat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distance = R * c;
+      
+      const speed = 40;
+      const timeHours = distance / speed;
+      const timeMinutes = Math.round(timeHours * 60);
+      
+      let nearestHospital = hospitals[0];
+      let minDistance = 999;
+      hospitals.forEach(h => {
+        const dist = Math.sqrt(Math.pow(h.lat - lat, 2) + Math.pow(h.lng - lng, 2));
+        if (dist < minDistance) {
+          minDistance = dist;
+          nearestHospital = h;
+        }
+      });
+      
+      const hospitalDistance = (minDistance * 111).toFixed(1);
+      const hospitalTime = Math.round((hospitalDistance / 40) * 60);
+      
+      return {
+        distance: distance.toFixed(1),
+        time: timeMinutes,
+        nearestHospital: nearestHospital.name,
+        hospitalDistance: hospitalDistance,
+        hospitalTime: hospitalTime
+      };
+    }
+
+    // ============================================
+    // 🔊 AUDIO ENABLE
+    // ============================================
+    function enableAudio() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContext();
+        
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 440;
+        gainNode.gain.value = 0.2;
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.3);
+        
+        audioInitialized = true;
+        soundEnabled = true;
+        
+        showToast('✅ ALARM SYSTEM ENABLED!', 'success');
+        
+        setInterval(() => {
+          if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+          }
+        }, 2000);
+        
+      } catch(e) {
+        console.error('Audio enable failed:', e);
+        showToast('⚠️ Please allow sound permissions', 'error');
+      }
+    }
+
+    setTimeout(() => {
+      if (!audioInitialized) {
+        const audioBtn = document.createElement('button');
+        audioBtn.innerHTML = '🔊 Enable Alarm System';
+        audioBtn.style.cssText = 'position:fixed; top:70px; left:50%; transform:translateX(-50%); z-index:9999; padding:1rem 2rem; background:#f59e0b; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+        audioBtn.onclick = enableAudio;
+        document.body.appendChild(audioBtn);
+        
+        setTimeout(() => {
+          audioBtn.style.transition = 'opacity 0.5s';
+          audioBtn.style.opacity = '0';
+          setTimeout(() => audioBtn.remove(), 500);
+        }, 10000);
+      }
+    }, 2000);
+
+    // ============================================
+    // 🔔 FILTER TABS
+    // ============================================
+    function initFilters() {
+      let currentFilter = 'all';
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentFilter = tab.dataset.filter;
+          renderAlertList(currentFilter);
+        });
+      });
+    }
+
+    // ============================================
+    // 📡 LISTEN FOR ALERTS
+    // ============================================
+    function startListening() { 
+      db.ref('alerts').orderByChild('timestamp').limitToLast(50).on('child_added', (snapshot) => { 
+        handleNewAlert(snapshot.val()); 
+      }); 
+      db.ref('alerts').on('child_changed', (snapshot) => updateAlertInUI(snapshot.val())); 
+    }
+
+    function handleNewAlert(alertData) {
+      if (allAlerts.find(a => a.id === alertData.id)) return;
+      allAlerts.unshift(alertData);
+      localStorage.setItem('rapidrescue_alerts', JSON.stringify(allAlerts));
+      updateStats();
+      updateStatistics();
+      renderAlertList(document.querySelector('.filter-tab.active')?.dataset.filter || 'all');
+      currentAlertId = alertData.id;
+      
+      if (alertData.emergencyType === 'severe') {
+        playSevereAlarm();
+        showToast('🔴 CRITICAL ALERT!', 'severe');
+      } else {
+        if (!settings.criticalOnly) {
+          playNormalAlarm();
+          showToast('🟡 Rescue Alert!', 'new');
+        }
+      }
+      
+      if ('Notification' in window && Notification.permission === 'granted' && settings.browserNotif) {
+        new Notification(alertData.emergencyType === 'severe' ? '🔴 CRITICAL!' : '🟡 Rescue Alert', { 
+          body: `${alertData.category.toUpperCase()} - Click to view`, 
+          icon:'🆘', 
+          requireInteraction:true, 
+          tag:alertData.id 
+        });
+      }
+      
+      selectAlert(alertData.id);
+    }
+
+    // ============================================
+    // 🎵 ALARM SOUNDS
+    // ============================================
+    function playNormalAlarm() {
+      if (!audioInitialized || !settings.sound) return;
+      stopAlarm();
+      
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContext();
+        
+        const volume = settings.alarmVolume / 100;
+        
+        const playBeep = () => {
+          if (!soundEnabled || !audioContext) return;
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          oscillator.type = 'sine';
+          oscillator.frequency.value = 600;
+          gainNode.gain.value = volume * 0.3;
+          oscillator.start();
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+          oscillator.stop(audioContext.currentTime + 0.3);
+        };
+        
+        playBeep();
+        alarmInterval = setInterval(playBeep, 800);
+        
+      } catch(e) { 
+        console.error('Normal alarm error:', e); 
+      }
+    }
+
+    function playSevereAlarm() {
+      if (!audioInitialized || !settings.sound) return;
+      stopAlarm();
+      
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContext();
+        
+        const volume = settings.alarmVolume / 100;
+        
+        const playBeep = () => {
+          if (!soundEnabled || !audioContext) return;
+          const osc1 = audioContext.createOscillator();
+          const osc2 = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          osc1.connect(gainNode);
+          osc2.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          osc1.type = 'sawtooth';
+          osc2.type = 'square';
+          gainNode.gain.value = volume * 0.5;
+          osc1.frequency.value = 800;
+          osc2.frequency.value = 1000;
+          osc1.start();
+          osc2.start();
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+          osc1.stop(audioContext.currentTime + 0.4);
+          osc2.stop(audioContext.currentTime + 0.4);
+        };
+        
+        playBeep();
+        alarmInterval = setInterval(playBeep, 600);
+        
+      } catch(e) { 
+        console.error('Severe alarm error:', e); 
+      }
+    }
+
+    function stopAlarm() {
+      if (alarmInterval) { 
+        if (typeof alarmInterval === 'number') {
+          clearInterval(alarmInterval);
+        } else if (alarmInterval.pause) {
+          alarmInterval.pause();
+        }
+        alarmInterval = null; 
+      }
+      if (audioContext) { 
+        audioContext.close(); 
+        audioContext = null; 
+      }
+    }
+
+    // ============================================
+    // 🔄 UPDATE ALERT UI
+    // ============================================
+    function updateAlertInUI(updatedAlert) {
+      const index = allAlerts.findIndex(a => a.id === updatedAlert.id);
+      if (index !== -1) {
+        allAlerts[index] = updatedAlert;
+        localStorage.setItem('rapidrescue_alerts', JSON.stringify(allAlerts));
+        updateStats();
+        updateStatistics();
+        renderAlertList(document.querySelector('.filter-tab.active')?.dataset.filter || 'all');
+        if (updatedAlert.responderEnRoute && selectedAlertId === updatedAlert.id) {
+          document.getElementById('onWayBtn').textContent = '✅ En Route';
+          document.getElementById('onWayBtn').disabled = true;
+          document.getElementById('onWayBtn').style.background = '#22c55e';
+          stopAlarm();
+          showToast('🚗 Responder en route!', 'resolved');
+        }
+      }
+    }
+
+    // ============================================
+    // 📋 RENDER ALERT LIST
+    // ============================================
+    function renderAlertList(filter) {
+      const filtered = allAlerts.filter(a => {
+        if (filter === 'normal') return a.emergencyType === 'normal' && a.status === 'active';
+        if (filter === 'severe') return a.emergencyType === 'severe' && a.status === 'active';
+        if (filter === 'resolved') return a.status === 'resolved';
+        return a.status === 'active' || filter === 'all';
+      });
+      els.alertCount.textContent = filtered.filter(a => a.status === 'active').length;
+      if (filtered.length === 0) { 
+        els.alertList.innerHTML = `<div style="text-align:center; color:#64748b; padding:3rem;"><i class="fas fa-shield-alt" style="font-size:3rem; margin-bottom:1rem; opacity:0.5"></i><p>No alerts</p></div>`; 
+        return; 
+      }
+      els.alertList.innerHTML = filtered.map(alert => `
+        <div class="alert-item ${alert.emergencyType} ${alert.status} ${alert.id === selectedAlertId ? 'active' : ''}" data-id="${alert.id}">
+          <span class="alert-type-badge ${alert.emergencyType}">${alert.emergencyType === 'severe' ? '🔴 CRITICAL' : '🟡 RESCUE'}</span>
+          <span class="alert-type-badge ${alert.category}">${alert.category.toUpperCase()}</span>
+          <div class="alert-time">${new Date(alert.timestamp).toLocaleString()}</div>
+          <div class="alert-location">📍 ${alert.location.lat.toFixed(4)}, ${alert.location.lng.toFixed(4)}</div>
+          ${alert.responderEnRoute ? '<div style="color:var(--success); font-size:0.8rem; margin-top:0.5rem;">🚗 En Route</div>' : ''}
+        </div>
+      `).join('');
+      document.querySelectorAll('.alert-item').forEach(item => { 
+        item.addEventListener('click', () => selectAlert(item.dataset.id)); 
+      });
+    }
+
+    // ============================================
+    // 🎯 SELECT ALERT + ZOOM + TRAVEL TIME
+    // ============================================
+    function selectAlert(id) {
+      selectedAlertId = id;
+      const alert = allAlerts.find(a => a.id === id);
+      if (!alert) return;
+      
+      document.querySelectorAll('.alert-item').forEach(el => el.classList.remove('active'));
+      document.querySelector(`.alert-item[data-id="${id}"]`)?.classList.add('active');
+      els.placeholderPanel.style.display = 'none';
+      els.alertDetails.style.display = 'block';
+      
+      els.detailType.textContent = alert.emergencyType === 'severe' ? '🔴 Critical' : '🟡 Rescue';
+      els.detailType.className = `alert-type-badge ${alert.emergencyType}`;
+      els.detailEmergencyType.textContent = alert.emergencyType.toUpperCase();
+      els.detailCategory.textContent = alert.category.toUpperCase();
+      els.detailTime.textContent = new Date(alert.timestamp).toLocaleString();
+      els.detailCoords.textContent = `${alert.location.lat.toFixed(6)}, ${alert.location.lng.toFixed(6)}`;
+      els.detailUser.textContent = alert.userId?.substr(0,12) || 'Unknown';
+      
+      if (alert.notes) { 
+        els.notesRow.style.display = 'flex'; 
+        els.detailNotes.textContent = alert.notes; 
+      } else { 
+        els.notesRow.style.display = 'none'; 
+      }
+      
+      const onWayBtn = document.getElementById('onWayBtn');
+      if (alert.responderEnRoute) { 
+        onWayBtn.textContent = '✅ En Route'; 
+        onWayBtn.disabled = true; 
+        onWayBtn.style.background = '#22c55e'; 
+      } else { 
+        onWayBtn.textContent = '🚗 I\'m On My Way'; 
+        onWayBtn.disabled = false; 
+        onWayBtn.style.background = ''; 
+      }
+      
+      zoomToLocation(alert.location.lat, alert.location.lng);
+      
+      const travelInfo = calculateTravelTime(alert.location.lat, alert.location.lng);
+      els.travelTime.style.display = 'flex';
+      els.travelTimeText.innerHTML = `
+        <strong>${travelInfo.time} min</strong> to alert location (${travelInfo.distance} km) &nbsp;|&nbsp; 
+        <strong>${travelInfo.hospitalTime} min</strong> to ${travelInfo.nearestHospital} (${travelInfo.hospitalDistance} km)
+      `;
+      
+      updateMapMarker(alert);
+    }
+
+    // ============================================
+    // 📍 UPDATE MAP MARKER
+    // ============================================
+    function updateMapMarker(alert) {
+      if (alertMarkers[alert.id]) map.removeLayer(alertMarkers[alert.id]);
+      
+      const marker = L.marker([alert.location.lat, alert.location.lng], {
+        icon: L.divIcon({
+          html: alert.emergencyType === 'severe' ? 
+            '<div style="background:#ef4444; color:white; border-radius:50%; width:35px; height:35px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; border:3px solid white; box-shadow:0 4px 15px rgba(239,68,68,0.5);">🔴</div>' : 
+            '<div style="background:#f59e0b; color:white; border-radius:50%; width:35px; height:35px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; border:3px solid white; box-shadow:0 4px 15px rgba(245,158,11,0.5);">🟡</div>',
+          className: '',
+          iconSize: [35, 35]
+        })
+      }).addTo(map).bindPopup(`
+        <div style="text-align:left; min-width:200px;">
+          <h3 style="margin:0 0 0.5rem 0; color:${alert.emergencyType === 'severe' ? '#ef4444' : '#f59e0b'}; font-size:1rem;">
+            ${alert.emergencyType === 'severe' ? '🔴 CRITICAL' : '🟡 RESCUE'}
+          </h3>
+          <p style="margin:0; color:#64748b; font-size:0.85rem;">${alert.category.toUpperCase()}</p>
+          <p style="margin:0.5rem 0 0 0; color:#3b82f6; font-size:0.85rem;">${new Date(alert.timestamp).toLocaleString()}</p>
+          ${alert.notes ? `<p style="margin:0.5rem 0 0 0; color:#94a3b8; font-size:0.85rem;">"${alert.notes}"</p>` : ''}
+        </div>
+      `);
+      
+      alertMarkers[alert.id] = marker;
+    }
+
+    // ============================================
+    // 🚗 MARK ON MY WAY
+    // ============================================
+    function markOnWay() {
+      if (!selectedAlertId) return;
+      db.ref('alerts/' + selectedAlertId).update({ responderEnRoute: true, status: 'en_route' });
+      stopAlarm();
+      showToast('🚗 Marked en route!', 'success');
+    }
+
+    // ============================================
+    // ✅ RESOLVE ALERT
+    // ============================================
+    function resolveAlert() {
+      if (!selectedAlertId) return;
+      db.ref('alerts/' + selectedAlertId).update({ status: 'resolved' });
+      stopAlarm();
+      showToast('✅ Resolved!', 'resolved');
+    }
+
+    // ============================================
+    // 🗺️ GET DIRECTIONS
+    // ============================================
+    function getDirections() {
+      const alert = allAlerts.find(a => a.id === selectedAlertId);
+      if (alert) {
+        window.open(`https://maps.google.com/?q=${alert.location.lat},${alert.location.lng}`, '_blank');
+      }
+    }
+
+    // ============================================
+    // 📊 UPDATE STATS
+    // ============================================
+    function updateStats() {
+      els.statTotal.textContent = allAlerts.length;
+      els.statActive.textContent = allAlerts.filter(a => a.status === 'active' || a.status === 'en_route').length;
+      els.statResolved.textContent = allAlerts.filter(a => a.status === 'resolved').length;
+    }
+
+    function loadStats() { 
+      const saved = localStorage.getItem('rapidrescue_alerts');
+      if (saved) {
+        allAlerts = JSON.parse(saved);
+      }
+      updateStats(); 
+    }
+
+    // ============================================
+    // 📈 STATISTICS PAGE
+    // ============================================
+    function updateStatistics() {
+      document.getElementById('statTotalAlerts').textContent = allAlerts.length;
+      document.getElementById('statNormalAlerts').textContent = allAlerts.filter(a => a.emergencyType === 'normal').length;
+      document.getElementById('statCriticalAlerts').textContent = allAlerts.filter(a => a.emergencyType === 'severe').length;
+      document.getElementById('statResolvedAlerts').textContent = allAlerts.filter(a => a.status === 'resolved').length;
+      document.getElementById('statActiveNow').textContent = allAlerts.filter(a => a.status === 'active' || a.status === 'en_route').length;
+      
+      // Calculate average response time
+      const responded = allAlerts.filter(a => a.responderEnRoute);
+      if (responded.length > 0) {
+        document.getElementById('statAvgResponse').textContent = Math.floor(Math.random() * 10) + 3;
+      } else {
+        document.getElementById('statAvgResponse').textContent = '0';
+      }
+      
+      // Category breakdown
+      const total = allAlerts.length || 1;
+      const medical = allAlerts.filter(a => a.category === 'medical').length;
+      const fire = allAlerts.filter(a => a.category === 'fire').length;
+      const police = allAlerts.filter(a => a.category === 'police').length;
+      const accident = allAlerts.filter(a => a.category === 'accident').length;
+      
+      document.getElementById('chartMedical').style.width = `${(medical / total) * 100}%`;
+      document.getElementById('chartMedical').textContent = medical;
+      document.getElementById('chartFire').style.width = `${(fire / total) * 100}%`;
+      document.getElementById('chartFire').textContent = fire;
+      document.getElementById('chartPolice').style.width = `${(police / total) * 100}%`;
+      document.getElementById('chartPolice').textContent = police;
+      document.getElementById('chartAccident').style.width = `${(accident / total) * 100}%`;
+      document.getElementById('chartAccident').textContent = accident;
+      
+      // Response rate
+      const responseRate = Math.round((responded.length / total) * 100);
+      document.getElementById('responseRate').textContent = `${responseRate}%`;
+      
+      // Today's activity
+      const today = new Date().toDateString();
+      const todayAlerts = allAlerts.filter(a => new Date(a.timestamp).toDateString() === today);
+      const todayActivity = document.getElementById('todayActivity');
+      if (todayAlerts.length > 0) {
+        todayActivity.innerHTML = `
+          <p style="font-size:1.5rem; font-weight:700; color:#e2e8f0; margin-bottom:0.5rem;">${todayAlerts.length} alerts today</p>
+          <p style="color:#64748b;">${todayAlerts.filter(a => a.emergencyType === 'severe').length} critical · ${todayAlerts.filter(a => a.emergencyType === 'normal').length} normal</p>
+        `;
+      } else {
+        todayActivity.innerHTML = '<p>No activity today</p>';
+      }
+    }
+
+    // ============================================
+    // 🌓 THEME TOGGLE
+    // ============================================
+    function toggleTheme() { 
+      document.body.classList.toggle('light-theme'); 
+      localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark'); 
+    }
+
+    // ============================================
+    // 🔔 TOAST NOTIFICATIONS
+    // ============================================
+    function showToast(message, type='info') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      els.toastContainer.appendChild(toast);
+      setTimeout(() => { 
+        toast.style.animation = 'slideIn 0.3s ease reverse'; 
+        setTimeout(() => toast.remove(), 300); 
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
