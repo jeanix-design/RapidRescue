@@ -722,6 +722,154 @@
       font-weight: 600;
     }
 
+    /* ── First Aid Section Styles ── */
+    .firstaid-container {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+    }
+    .firstaid-search {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .firstaid-search input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      background: #0d1120;
+      color: #e0e6f0;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+    }
+    .firstaid-search button {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .firstaid-categories {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .firstaid-category {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid #1e293b;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .firstaid-category.active,
+    .firstaid-category:hover {
+      background: rgba(239,68,68,0.1);
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+    .firstaid-list {
+      display: grid;
+      gap: 1rem;
+    }
+    .firstaid-item {
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      padding: 1rem;
+      border-left: 4px solid #3b82f6;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .firstaid-item:hover {
+      background: rgba(59,130,246,0.1);
+      transform: translateX(4px);
+    }
+    .firstaid-item.critical {
+      border-left-color: #ef4444;
+    }
+    .firstaid-item h4 {
+      color: #e2e8f0;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .firstaid-item p {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+    .firstaid-steps {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: none;
+    }
+    .firstaid-item.expanded .firstaid-steps {
+      display: block;
+    }
+    .firstaid-step {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+      color: #e2e8f0;
+    }
+    .firstaid-step-number {
+      background: #ef4444;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .firstaid-warning {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid #f59e0b;
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #f59e0b;
+    }
+    .firstaid-warning i {
+      margin-right: 0.5rem;
+    }
+    .firstaid-call {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid #ef4444;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    .firstaid-call h4 {
+      color: #ef4444;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+    .firstaid-call p {
+      color: #e2e8f0;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
     /* ── Delivery Cart ── */
     .delivery-cart {
       background: rgba(34,197,94,0.1);
@@ -942,12 +1090,14 @@
     body.light-theme .map-card,
     body.light-theme .medicine-card,
     body.light-theme .history-item,
-    body.light-theme .settings-card {
+    body.light-theme .settings-card,
+    body.light-theme .firstaid-container {
       background: #fff;
       border-color: #e2e8f0;
     }
     body.light-theme .notes-card textarea,
-    body.light-theme .medicine-search input {
+    body.light-theme .medicine-search input,
+    body.light-theme .firstaid-search input {
       background: #fff;
       border-color: #e2e8f0;
       color: #0f172a;
@@ -1028,6 +1178,13 @@
       }
       .settings-grid {
         grid-template-columns: 1fr;
+      }
+      .firstaid-categories {
+        gap: 0.25rem;
+      }
+      .firstaid-category {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.75rem;
       }
     }
 
@@ -1173,6 +1330,7 @@
     </div>
     <nav>
       <a href="#" class="active" onclick="showPage('home', this)"><span class="icon">🏠</span> Dashboard</a>
+      <a href="#" onclick="showPage('firstaid', this)"><span class="icon">🩹</span> First Aid</a>
       <a href="#" onclick="showPage('history', this)"><span class="icon">📜</span> History</a>
       <a href="#" onclick="showPage('settings', this)"><span class="icon">⚙️</span> Settings</a>
     </nav>
@@ -1312,6 +1470,335 @@
       </footer>
     </div>
 
+    <!-- FIRST AID PAGE -->
+    <div class="page" id="firstaidPage">
+      <div class="topbar">
+        <h1>🩹 <span>First Aid Guidance</span></h1>
+      </div>
+      
+      <div class="firstaid-container">
+        <h3 style="margin-bottom:1rem; color:#e2e8f0;">Quick First Aid Reference</h3>
+        <p style="color:#64748b; margin-bottom:1.5rem; font-size:0.9rem;">
+          ⚠️ <strong>Important:</strong> These guidelines are for emergency situations only. 
+          Always call professional emergency services for serious injuries or illnesses.
+        </p>
+        
+        <!-- Search -->
+        <div class="firstaid-search">
+          <input type="text" id="firstaidSearch" placeholder="Search first aid (e.g., bleeding, burn, CPR)..." oninput="filterFirstAid()">
+          <button onclick="filterFirstAid()">🔍</button>
+        </div>
+        
+        <!-- Categories -->
+        <div class="firstaid-categories">
+          <div class="firstaid-category active" onclick="filterFirstAidCategory('all', this)">All</div>
+          <div class="firstaid-category" onclick="filterFirstAidCategory('critical', this)">🔴 Critical</div>
+          <div class="firstaid-category" onclick="filterFirstAidCategory('injury', this)">🤕 Injuries</div>
+          <div class="firstaid-category" onclick="filterFirstAidCategory('medical', this)">🏥 Medical</div>
+          <div class="firstaid-category" onclick="filterFirstAidCategory('environmental', this)">🌡️ Environmental</div>
+        </div>
+        
+        <!-- First Aid List -->
+        <div class="firstaid-list" id="firstaidList">
+          <!-- CPR -->
+          <div class="firstaid-item critical" data-category="critical medical" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-heartbeat"></i> CPR (Cardiopulmonary Resuscitation)</h4>
+            <p>For someone who is unresponsive and not breathing normally.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Check for responsiveness: Tap and shout "Are you okay?"</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> Call emergency services immediately or ask someone to call</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> Place person on their back on a firm surface</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> Place heel of one hand on center of chest, other hand on top</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> Push hard and fast: 100-120 compressions per minute, 2 inches deep</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> Allow chest to fully recoil between compressions</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">7</span> Continue until help arrives or person shows signs of life</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Only perform CPR if trained.</strong> If untrained, do hands-only CPR (compressions only).
+              </div>
+              <div class="firstaid-call">
+                <h4>🚨 Call Emergency Services Now</h4>
+                <p>📞 911 (US) | 112 (EU) | 999 (UK) | 110/119 (Japan)</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Choking -->
+          <div class="firstaid-item critical" data-category="critical" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-wind"></i> Choking (Heimlich Maneuver)</h4>
+            <p>For someone who cannot breathe, speak, or cough due to blocked airway.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Ask: "Are you choking?" If they nod yes and can't speak, act immediately</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> Stand behind person, wrap arms around their waist</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> Make a fist with one hand, place thumb side against abdomen above navel</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> Grasp fist with other hand, give quick upward thrusts</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> Continue until object is dislodged or person becomes unconscious</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> If person becomes unconscious, begin CPR and call emergency services</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>For pregnant or obese persons:</strong> Place hands on chest instead of abdomen.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Severe Bleeding -->
+          <div class="firstaid-item critical" data-category="critical injury" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-tint"></i> Severe Bleeding</h4>
+            <p>For heavy bleeding that won't stop with normal pressure.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Call emergency services immediately</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> Have person lie down and keep calm</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> Apply direct pressure with clean cloth or gauze</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> If blood soaks through, add more layers - DO NOT remove original dressing</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> If possible, elevate injured area above heart level</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> If bleeding doesn't stop and is life-threatening, apply tourniquet 2-3 inches above wound</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">7</span> Note time tourniquet was applied and tell emergency responders</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Never remove embedded objects.</strong> Apply pressure around the object, not on it.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Burns -->
+          <div class="firstaid-item" data-category="injury" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-fire"></i> Burns</h4>
+            <p>For thermal, chemical, or electrical burns.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Stop the burning process: Remove from heat source</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> Cool the burn: Run cool (not cold) water over burn for 10-20 minutes</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> Remove jewelry or tight clothing near burn before swelling starts</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> Cover with sterile, non-stick bandage or clean cloth</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> Do NOT break blisters, apply ice, butter, or ointments</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> For chemical burns: Flush with water for 20+ minutes, remove contaminated clothing</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">7</span> Seek medical attention for: large burns, face/hands/feet/genitals burns, or signs of infection</div>
+            </div>
+          </div>
+          
+          <!-- Fractures/Sprains -->
+          <div class="firstaid-item" data-category="injury" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-bone"></i> Fractures & Sprains</h4>
+            <p>For suspected broken bones or joint injuries.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Keep person still and calm; do NOT move injured area</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> Call emergency services if: deformity, severe pain, inability to move, or injury to head/neck/back</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> Apply ice pack wrapped in cloth to reduce swelling (20 min on, 20 min off)</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> If trained and necessary, immobilize with splint (use rigid object + bandages)</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> Elevate injured area if possible to reduce swelling</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> Monitor for signs of shock: pale skin, rapid breathing, weakness</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Never try to straighten a deformed limb.</strong> Immobilize in position found.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Shock -->
+          <div class="firstaid-item critical" data-category="critical medical" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-heart"></i> Shock</h4>
+            <p>For person showing signs of shock: pale/clammy skin, rapid weak pulse, confusion, fainting.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Call emergency services immediately</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> Have person lie down on their back</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> Elevate legs 8-12 inches (unless head/neck/back/leg injuries suspected)</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> Keep person warm with blanket (not hot)</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> Loosen tight clothing</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> Do NOT give food or drink</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">7</span> Monitor breathing and be ready to perform CPR if needed</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Shock is life-threatening.</strong> Always seek immediate medical attention.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Allergic Reaction -->
+          <div class="firstaid-item critical" data-category="critical medical" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-allergies"></i> Severe Allergic Reaction (Anaphylaxis)</h4>
+            <p>For symptoms: difficulty breathing, swelling of face/throat, hives, rapid pulse, dizziness.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Call emergency services immediately</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> Ask if person has epinephrine auto-injector (EpiPen)</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> If yes, help them use it: Remove safety cap, press firmly against outer thigh, hold for 3 seconds</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> Have person lie down with legs elevated (unless breathing is easier sitting up)</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> Loosen tight clothing, cover with blanket</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> Do NOT give oral medications if person is having trouble breathing</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">7</span> If no improvement in 5-15 minutes and second auto-injector available, administer second dose</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Anaphylaxis can be fatal.</strong> Even if symptoms improve, person MUST go to hospital.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Heart Attack -->
+          <div class="firstaid-item critical" data-category="critical medical" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-heart-broken"></i> Heart Attack Symptoms</h4>
+            <p>For symptoms: chest pain/pressure, pain in arm/jaw/back, shortness of breath, nausea, cold sweat.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Call emergency services IMMEDIATELY - do not wait</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> Have person stop all activity and rest in comfortable position (usually sitting)</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> Loosen tight clothing</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> Ask if person takes heart medication (nitroglycerin) and help them take it if prescribed</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> If person is not allergic and has no bleeding disorder, give 1 adult aspirin (325mg) to chew</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> Monitor breathing and be ready to perform CPR if person becomes unresponsive</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">7</span> Stay with person until help arrives</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Time is critical.</strong> Every minute counts - call emergency services immediately.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Stroke (FAST) -->
+          <div class="firstaid-item critical" data-category="critical medical" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-brain"></i> Stroke (Remember FAST)</h4>
+            <p>For symptoms: sudden numbness, confusion, trouble speaking, vision problems, severe headache.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> <strong>F</strong>ace: Ask person to smile. Does one side droop?</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> <strong>A</strong>rms: Ask person to raise both arms. Does one drift downward?</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> <strong>S</strong>peech: Ask person to repeat simple phrase. Is speech slurred or strange?</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> <strong>T</strong>ime: If ANY of these signs, call emergency services IMMEDIATELY</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> Note time symptoms first appeared - critical for treatment</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> Have person lie down with head slightly elevated</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">7</span> Do NOT give food, drink, or medications</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">8</span> Monitor breathing and be ready for CPR</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>"Time lost is brain lost."</strong> Stroke treatment is most effective within 3-4.5 hours of symptom onset.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Poisoning -->
+          <div class="firstaid-item" data-category="medical" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-flask"></i> Poisoning</h4>
+            <p>For suspected ingestion, inhalation, or skin contact with poison.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Call Poison Control immediately: 📞 1-800-222-1222 (US) or local emergency number</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> If person is unconscious, not breathing, or having seizures: Call emergency services immediately</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> For swallowed poison: Do NOT induce vomiting unless instructed by Poison Control</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> For inhaled poison: Move person to fresh air immediately</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> For skin contact: Remove contaminated clothing, rinse skin with water for 15-20 minutes</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> For eye contact: Rinse eyes with lukewarm water for 15-20 minutes, holding eyelids open</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">7</span> Have container or substance information ready for Poison Control</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Never give anything by mouth to an unconscious person.</strong>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Seizures -->
+          <div class="firstaid-item" data-category="medical" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-bolt"></i> Seizures</h4>
+            <p>For someone having a seizure (convulsions, loss of consciousness).</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Stay calm and note time seizure starts</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> Keep person safe: Clear area of hard/sharp objects, place soft item under head</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> Turn person onto their side (recovery position) to keep airway clear</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> Loosen tight clothing around neck</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> Do NOT restrain person or put anything in their mouth</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> Stay with person until seizure ends and they are fully conscious</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">7</span> Call emergency services if: seizure lasts >5 minutes, person has repeated seizures, is injured, pregnant, or has diabetes, or if it's their first seizure</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Never put anything in the mouth of a person having a seizure.</strong> They cannot swallow their tongue.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Heat Exhaustion/Stroke -->
+          <div class="firstaid-item" data-category="environmental" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-temperature-high"></i> Heat Exhaustion / Heat Stroke</h4>
+            <p>For symptoms: heavy sweating, weakness, dizziness, nausea, headache, high body temperature.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Move person to cool, shaded area immediately</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> Have person lie down and elevate legs slightly</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> Remove excess or tight clothing</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> Cool person: Apply cool wet cloths to head/neck/armpits/groin, fan air over them</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> If conscious and not nauseated, give small sips of cool water or sports drink</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> Monitor for signs of heat stroke: confusion, loss of consciousness, hot/dry skin, body temp >103°F (39.4°C)</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">7</span> If heat stroke suspected: Call emergency services immediately, continue cooling measures</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Heat stroke is a medical emergency.</strong> Can cause organ damage or death if not treated immediately.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Hypothermia -->
+          <div class="firstaid-item" data-category="environmental" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-snowflake"></i> Hypothermia</h4>
+            <p>For symptoms: shivering, confusion, slurred speech, drowsiness, weak pulse, slow breathing.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Move person to warm, dry place immediately</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> Remove wet clothing, replace with dry layers or blankets</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> Cover head and neck to prevent heat loss</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> If conscious and able to swallow, give warm (not hot) non-alcoholic, non-caffeinated drinks</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> Use skin-to-skin contact under dry blankets if needed</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> Do NOT rub or massage cold limbs - can cause dangerous heart rhythms</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">7</span> Handle person gently - rough movement can trigger cardiac arrest in severe hypothermia</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">8</span> Call emergency services for moderate to severe hypothermia</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Do NOT use direct heat</strong> (hot water, heating pads) - can cause burns or dangerous blood flow changes.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Basic Wound Care -->
+          <div class="firstaid-item" data-category="injury" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-band-aid"></i> Basic Wound Care</h4>
+            <p>For minor cuts, scrapes, and abrasions.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">1</span> Wash hands with soap and water or use hand sanitizer</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">2</span> Stop bleeding: Apply gentle pressure with clean cloth or gauze</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">3</span> Clean wound: Rinse with clean, running water. Use mild soap around (not in) wound</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">4</span> Remove debris: Use tweezers cleaned with alcohol to remove visible dirt</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">5</span> Apply antibiotic ointment if available and no allergy</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">6</span> Cover with sterile bandage or adhesive strip</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">7</span> Change dressing daily or when wet/dirty</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">8</span> Watch for infection: increased redness, swelling, warmth, pus, or fever</div>
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Seek medical care for:</strong> Deep wounds, animal/human bites, puncture wounds, or signs of infection.
+              </div>
+            </div>
+          </div>
+          
+          <!-- When to Call Emergency Services -->
+          <div class="firstaid-item critical" data-category="critical" onclick="toggleFirstAid(this)">
+            <h4><i class="fas fa-phone-volume"></i> When to Call Emergency Services</h4>
+            <p>Call immediately for any of these situations.</p>
+            <div class="firstaid-steps">
+              <div class="firstaid-step"><span class="firstaid-step-number">✓</span> Unconsciousness or unresponsiveness</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">✓</span> Difficulty breathing or not breathing</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">✓</span> Chest pain or pressure lasting more than a few minutes</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">✓</span> Severe bleeding that won't stop</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">✓</span> Signs of stroke (FAST: Face drooping, Arm weakness, Speech difficulty)</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">✓</span> Severe allergic reaction (anaphylaxis)</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">✓</span> Head, neck, or back injury with pain or numbness</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">✓</span> Suspected broken bone with deformity or inability to move</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">✓</span> Severe burns (large area, face/hands/feet/genitals, or deep burns)</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">✓</span> Poisoning or suspected overdose</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">✓</span> Seizure lasting more than 5 minutes or repeated seizures</div>
+              <div class="firstaid-step"><span class="firstaid-step-number">✓</span> Suicidal thoughts or self-harm</div>
+              <div class="firstaid-call">
+                <h4>🚨 Emergency Numbers</h4>
+                <p>🇺🇸 USA: 911 | 🇪🇺 Europe: 112 | 🇬🇧 UK: 999 | 🇯🇵 Japan: 110/119</p>
+                <p style="margin-top:0.5rem; font-size:0.9rem;">🌍 Find your local emergency number: <a href="https://en.wikipedia.org/wiki/Emergency_telephone_number" target="_blank" style="color:#3b82f6;">Wikipedia List</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer style="margin-top:48px; padding-top:20px; border-top:1px solid #1e293b; text-align:center; font-size:0.75rem; color:#334155;">
+        &copy; 2025 RapidRescue. All rights reserved.
+      </footer>
+    </div>
+
     <!-- HISTORY PAGE -->
     <div class="page" id="historyPage">
       <div class="topbar">
@@ -1419,6 +1906,10 @@
       <i class="fas fa-home"></i>
       <span>Home</span>
     </div>
+    <div class="nav-item" onclick="showPage('firstaid', this)">
+      <i class="fas fa-band-aid"></i>
+      <span>First Aid</span>
+    </div>
     <div class="nav-item" onclick="showPage('history', this)">
       <i class="fas fa-history"></i>
       <span>History</span>
@@ -1505,6 +1996,289 @@
       { name: 'Medhanealem Pharmacy - Megenagna', lat: 9.0200, lng: 38.7900, hours: '24/7' }
     ];
 
+    // ============================================
+    // 🩹 FIRST AID DATA
+    // ============================================
+    const firstAidData = [
+      {
+        id: 'cpr',
+        title: 'CPR (Cardiopulmonary Resuscitation)',
+        icon: 'fa-heartbeat',
+        category: 'critical medical',
+        description: 'For someone who is unresponsive and not breathing normally.',
+        steps: [
+          'Check for responsiveness: Tap and shout "Are you okay?"',
+          'Call emergency services immediately or ask someone to call',
+          'Place person on their back on a firm surface',
+          'Place heel of one hand on center of chest, other hand on top',
+          'Push hard and fast: 100-120 compressions per minute, 2 inches deep',
+          'Allow chest to fully recoil between compressions',
+          'Continue until help arrives or person shows signs of life'
+        ],
+        warning: 'Only perform CPR if trained. If untrained, do hands-only CPR (compressions only).',
+        callEmergency: true
+      },
+      {
+        id: 'choking',
+        title: 'Choking (Heimlich Maneuver)',
+        icon: 'fa-wind',
+        category: 'critical',
+        description: 'For someone who cannot breathe, speak, or cough due to blocked airway.',
+        steps: [
+          'Ask: "Are you choking?" If they nod yes and can\'t speak, act immediately',
+          'Stand behind person, wrap arms around their waist',
+          'Make a fist with one hand, place thumb side against abdomen above navel',
+          'Grasp fist with other hand, give quick upward thrusts',
+          'Continue until object is dislodged or person becomes unconscious',
+          'If person becomes unconscious, begin CPR and call emergency services'
+        ],
+        warning: 'For pregnant or obese persons: Place hands on chest instead of abdomen.',
+        callEmergency: false
+      },
+      {
+        id: 'bleeding',
+        title: 'Severe Bleeding',
+        icon: 'fa-tint',
+        category: 'critical injury',
+        description: 'For heavy bleeding that won\'t stop with normal pressure.',
+        steps: [
+          'Call emergency services immediately',
+          'Have person lie down and keep calm',
+          'Apply direct pressure with clean cloth or gauze',
+          'If blood soaks through, add more layers - DO NOT remove original dressing',
+          'If possible, elevate injured area above heart level',
+          'If bleeding doesn\'t stop and is life-threatening, apply tourniquet 2-3 inches above wound',
+          'Note time tourniquet was applied and tell emergency responders'
+        ],
+        warning: 'Never remove embedded objects. Apply pressure around the object, not on it.',
+        callEmergency: true
+      },
+      {
+        id: 'burns',
+        title: 'Burns',
+        icon: 'fa-fire',
+        category: 'injury',
+        description: 'For thermal, chemical, or electrical burns.',
+        steps: [
+          'Stop the burning process: Remove from heat source',
+          'Cool the burn: Run cool (not cold) water over burn for 10-20 minutes',
+          'Remove jewelry or tight clothing near burn before swelling starts',
+          'Cover with sterile, non-stick bandage or clean cloth',
+          'Do NOT break blisters, apply ice, butter, or ointments',
+          'For chemical burns: Flush with water for 20+ minutes, remove contaminated clothing',
+          'Seek medical attention for: large burns, face/hands/feet/genitals burns, or signs of infection'
+        ],
+        warning: null,
+        callEmergency: false
+      },
+      {
+        id: 'fractures',
+        title: 'Fractures & Sprains',
+        icon: 'fa-bone',
+        category: 'injury',
+        description: 'For suspected broken bones or joint injuries.',
+        steps: [
+          'Keep person still and calm; do NOT move injured area',
+          'Call emergency services if: deformity, severe pain, inability to move, or injury to head/neck/back',
+          'Apply ice pack wrapped in cloth to reduce swelling (20 min on, 20 min off)',
+          'If trained and necessary, immobilize with splint (use rigid object + bandages)',
+          'Elevate injured area if possible to reduce swelling',
+          'Monitor for signs of shock: pale skin, rapid breathing, weakness'
+        ],
+        warning: 'Never try to straighten a deformed limb. Immobilize in position found.',
+        callEmergency: false
+      },
+      {
+        id: 'shock',
+        title: 'Shock',
+        icon: 'fa-heart',
+        category: 'critical medical',
+        description: 'For person showing signs of shock: pale/clammy skin, rapid weak pulse, confusion, fainting.',
+        steps: [
+          'Call emergency services immediately',
+          'Have person lie down on their back',
+          'Elevate legs 8-12 inches (unless head/neck/back/leg injuries suspected)',
+          'Keep person warm with blanket (not hot)',
+          'Loosen tight clothing',
+          'Do NOT give food or drink',
+          'Monitor breathing and be ready to perform CPR if needed'
+        ],
+        warning: 'Shock is life-threatening. Always seek immediate medical attention.',
+        callEmergency: true
+      },
+      {
+        id: 'allergic',
+        title: 'Severe Allergic Reaction (Anaphylaxis)',
+        icon: 'fa-allergies',
+        category: 'critical medical',
+        description: 'For symptoms: difficulty breathing, swelling of face/throat, hives, rapid pulse, dizziness.',
+        steps: [
+          'Call emergency services immediately',
+          'Ask if person has epinephrine auto-injector (EpiPen)',
+          'If yes, help them use it: Remove safety cap, press firmly against outer thigh, hold for 3 seconds',
+          'Have person lie down with legs elevated (unless breathing is easier sitting up)',
+          'Loosen tight clothing, cover with blanket',
+          'Do NOT give oral medications if person is having trouble breathing',
+          'If no improvement in 5-15 minutes and second auto-injector available, administer second dose'
+        ],
+        warning: 'Anaphylaxis can be fatal. Even if symptoms improve, person MUST go to hospital.',
+        callEmergency: true
+      },
+      {
+        id: 'heart-attack',
+        title: 'Heart Attack Symptoms',
+        icon: 'fa-heart-broken',
+        category: 'critical medical',
+        description: 'For symptoms: chest pain/pressure, pain in arm/jaw/back, shortness of breath, nausea, cold sweat.',
+        steps: [
+          'Call emergency services IMMEDIATELY - do not wait',
+          'Have person stop all activity and rest in comfortable position (usually sitting)',
+          'Loosen tight clothing',
+          'Ask if person takes heart medication (nitroglycerin) and help them take it if prescribed',
+          'If person is not allergic and has no bleeding disorder, give 1 adult aspirin (325mg) to chew',
+          'Monitor breathing and be ready to perform CPR if person becomes unresponsive',
+          'Stay with person until help arrives'
+        ],
+        warning: 'Time is critical. Every minute counts - call emergency services immediately.',
+        callEmergency: true
+      },
+      {
+        id: 'stroke',
+        title: 'Stroke (Remember FAST)',
+        icon: 'fa-brain',
+        category: 'critical medical',
+        description: 'For symptoms: sudden numbness, confusion, trouble speaking, vision problems, severe headache.',
+        steps: [
+          'F - Face: Ask person to smile. Does one side droop?',
+          'A - Arms: Ask person to raise both arms. Does one drift downward?',
+          'S - Speech: Ask person to repeat simple phrase. Is speech slurred or strange?',
+          'T - Time: If ANY of these signs, call emergency services IMMEDIATELY',
+          'Note time symptoms first appeared - critical for treatment',
+          'Have person lie down with head slightly elevated',
+          'Do NOT give food, drink, or medications',
+          'Monitor breathing and be ready for CPR'
+        ],
+        warning: '"Time lost is brain lost." Stroke treatment is most effective within 3-4.5 hours of symptom onset.',
+        callEmergency: true
+      },
+      {
+        id: 'poisoning',
+        title: 'Poisoning',
+        icon: 'fa-flask',
+        category: 'medical',
+        description: 'For suspected ingestion, inhalation, or skin contact with poison.',
+        steps: [
+          'Call Poison Control immediately: 📞 1-800-222-1222 (US) or local emergency number',
+          'If person is unconscious, not breathing, or having seizures: Call emergency services immediately',
+          'For swallowed poison: Do NOT induce vomiting unless instructed by Poison Control',
+          'For inhaled poison: Move person to fresh air immediately',
+          'For skin contact: Remove contaminated clothing, rinse skin with water for 15-20 minutes',
+          'For eye contact: Rinse eyes with lukewarm water for 15-20 minutes, holding eyelids open',
+          'Have container or substance information ready for Poison Control'
+        ],
+        warning: 'Never give anything by mouth to an unconscious person.',
+        callEmergency: false
+      },
+      {
+        id: 'seizures',
+        title: 'Seizures',
+        icon: 'fa-bolt',
+        category: 'medical',
+        description: 'For someone having a seizure (convulsions, loss of consciousness).',
+        steps: [
+          'Stay calm and note time seizure starts',
+          'Keep person safe: Clear area of hard/sharp objects, place soft item under head',
+          'Turn person onto their side (recovery position) to keep airway clear',
+          'Loosen tight clothing around neck',
+          'Do NOT restrain person or put anything in their mouth',
+          'Stay with person until seizure ends and they are fully conscious',
+          'Call emergency services if: seizure lasts >5 minutes, person has repeated seizures, is injured, pregnant, or has diabetes, or if it\'s their first seizure'
+        ],
+        warning: 'Never put anything in the mouth of a person having a seizure. They cannot swallow their tongue.',
+        callEmergency: false
+      },
+      {
+        id: 'heat',
+        title: 'Heat Exhaustion / Heat Stroke',
+        icon: 'fa-temperature-high',
+        category: 'environmental',
+        description: 'For symptoms: heavy sweating, weakness, dizziness, nausea, headache, high body temperature.',
+        steps: [
+          'Move person to cool, shaded area immediately',
+          'Have person lie down and elevate legs slightly',
+          'Remove excess or tight clothing',
+          'Cool person: Apply cool wet cloths to head/neck/armpits/groin, fan air over them',
+          'If conscious and not nauseated, give small sips of cool water or sports drink',
+          'Monitor for signs of heat stroke: confusion, loss of consciousness, hot/dry skin, body temp >103°F (39.4°C)',
+          'If heat stroke suspected: Call emergency services immediately, continue cooling measures'
+        ],
+        warning: 'Heat stroke is a medical emergency. Can cause organ damage or death if not treated immediately.',
+        callEmergency: false
+      },
+      {
+        id: 'hypothermia',
+        title: 'Hypothermia',
+        icon: 'fa-snowflake',
+        category: 'environmental',
+        description: 'For symptoms: shivering, confusion, slurred speech, drowsiness, weak pulse, slow breathing.',
+        steps: [
+          'Move person to warm, dry place immediately',
+          'Remove wet clothing, replace with dry layers or blankets',
+          'Cover head and neck to prevent heat loss',
+          'If conscious and able to swallow, give warm (not hot) non-alcoholic, non-caffeinated drinks',
+          'Use skin-to-skin contact under dry blankets if needed',
+          'Do NOT rub or massage cold limbs - can cause dangerous heart rhythms',
+          'Handle person gently - rough movement can trigger cardiac arrest in severe hypothermia',
+          'Call emergency services for moderate to severe hypothermia'
+        ],
+        warning: 'Do NOT use direct heat (hot water, heating pads) - can cause burns or dangerous blood flow changes.',
+        callEmergency: false
+      },
+      {
+        id: 'wound-care',
+        title: 'Basic Wound Care',
+        icon: 'fa-band-aid',
+        category: 'injury',
+        description: 'For minor cuts, scrapes, and abrasions.',
+        steps: [
+          'Wash hands with soap and water or use hand sanitizer',
+          'Stop bleeding: Apply gentle pressure with clean cloth or gauze',
+          'Clean wound: Rinse with clean, running water. Use mild soap around (not in) wound',
+          'Remove debris: Use tweezers cleaned with alcohol to remove visible dirt',
+          'Apply antibiotic ointment if available and no allergy',
+          'Cover with sterile bandage or adhesive strip',
+          'Change dressing daily or when wet/dirty',
+          'Watch for infection: increased redness, swelling, warmth, pus, or fever'
+        ],
+        warning: 'Seek medical care for: Deep wounds, animal/human bites, puncture wounds, or signs of infection.',
+        callEmergency: false
+      },
+      {
+        id: 'when-to-call',
+        title: 'When to Call Emergency Services',
+        icon: 'fa-phone-volume',
+        category: 'critical',
+        description: 'Call immediately for any of these situations.',
+        steps: [
+          '✓ Unconsciousness or unresponsiveness',
+          '✓ Difficulty breathing or not breathing',
+          '✓ Chest pain or pressure lasting more than a few minutes',
+          '✓ Severe bleeding that won\'t stop',
+          '✓ Signs of stroke (FAST: Face drooping, Arm weakness, Speech difficulty)',
+          '✓ Severe allergic reaction (anaphylaxis)',
+          '✓ Head, neck, or back injury with pain or numbness',
+          '✓ Suspected broken bone with deformity or inability to move',
+          '✓ Severe burns (large area, face/hands/feet/genitals, or deep burns)',
+          '✓ Poisoning or suspected overdose',
+          '✓ Seizure lasting more than 5 minutes or repeated seizures',
+          '✓ Suicidal thoughts or self-harm'
+        ],
+        warning: null,
+        callEmergency: true,
+        emergencyNumbers: '🇺🇸 USA: 911 | 🇪🇺 Europe: 112 | 🇬🇧 UK: 999 | 🇯🇵 Japan: 110/119'
+      }
+    ];
+
     document.addEventListener('DOMContentLoaded', () => {
       loadTheme();
       loadSettings();
@@ -1514,6 +2288,7 @@
       initBattery();
       loadHistory();
       updateStats();
+      renderFirstAidList();
       
       // Register service worker for PWA
       if ('serviceWorker' in navigator) {
@@ -1596,6 +2371,89 @@
       }
       
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ============================================
+    // 🩹 FIRST AID FUNCTIONS
+    // ============================================
+    function renderFirstAidList(filter = 'all', category = 'all') {
+      const list = document.getElementById('firstaidList');
+      let filtered = firstAidData;
+      
+      // Filter by search text
+      if (filter && filter !== 'all') {
+        const searchTerm = filter.toLowerCase();
+        filtered = filtered.filter(item => 
+          item.title.toLowerCase().includes(searchTerm) ||
+          item.description.toLowerCase().includes(searchTerm) ||
+          item.steps.some(step => step.toLowerCase().includes(searchTerm))
+        );
+      }
+      
+      // Filter by category
+      if (category && category !== 'all') {
+        filtered = filtered.filter(item => item.category.includes(category));
+      }
+      
+      if (filtered.length === 0) {
+        list.innerHTML = '<p style="color:#64748b; text-align:center; padding:2rem;">No first aid procedures found. Try a different search.</p>';
+        return;
+      }
+      
+      list.innerHTML = filtered.map(item => `
+        <div class="firstaid-item ${item.category.includes('critical') ? 'critical' : ''}" data-category="${item.category}" onclick="toggleFirstAid(this)">
+          <h4><i class="fas ${item.icon}"></i> ${item.title}</h4>
+          <p>${item.description}</p>
+          <div class="firstaid-steps">
+            ${item.steps.map((step, index) => `
+              <div class="firstaid-step">
+                <span class="firstaid-step-number">${item.id === 'when-to-call' ? '✓' : index + 1}</span>
+                ${step}
+              </div>
+            `).join('')}
+            ${item.warning ? `
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>${item.warning}</strong>
+              </div>
+            ` : ''}
+            ${item.callEmergency ? `
+              <div class="firstaid-call">
+                <h4>🚨 Call Emergency Services Now</h4>
+                <p>${item.emergencyNumbers || '📞 911 (US) | 112 (EU) | 999 (UK) | 110/119 (Japan)'}</p>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleFirstAid(element) {
+      element.classList.toggle('expanded');
+    }
+
+    function filterFirstAid() {
+      const searchTerm = document.getElementById('firstaidSearch').value;
+      renderFirstAidList(searchTerm, getCurrentFirstAidCategory());
+    }
+
+    function filterFirstAidCategory(category, element) {
+      // Update active category button
+      document.querySelectorAll('.firstaid-category').forEach(btn => btn.classList.remove('active'));
+      element.classList.add('active');
+      
+      // Re-render list with new filter
+      const searchTerm = document.getElementById('firstaidSearch').value;
+      renderFirstAidList(searchTerm, category);
+    }
+
+    function getCurrentFirstAidCategory() {
+      const activeBtn = document.querySelector('.firstaid-category.active');
+      if (!activeBtn) return 'all';
+      
+      const onclick = activeBtn.getAttribute('onclick');
+      const match = onclick.match(/'([^']+)'/);
+      return match ? match[1] : 'all';
     }
 
     // ============================================
