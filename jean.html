@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#22c55e"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <title>🚑 Responders En Route - RapidRescue</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { 
+      background: #0a0e1a; 
+      color: #e0e6f0; 
+      font-family: 'Inter', Arial, sans-serif; 
+      min-height: 100vh;
+      padding-bottom: 2rem;
+    }
+    
+    /* Status Banner */
+    .status-banner {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+    }
+    .status-banner h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .status-banner p {
+      font-size: 1rem;
+      opacity: 0.95;
+    }
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+    }
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      background: white;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+    
+    /* Map Section */
+    .map-section {
+      padding: 1.5rem 1rem;
+    }
+    .map-card {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    #map {
+      height: 50vh;
+      min-height: 350px;
+      width: 100%;
+    }
+    .responder-info {
+      padding: 1.5rem;
+    }
+    .responder-info h3 {
+      color: #22c55e;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .responder-info p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .eta-box {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid #22c55e;
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .eta-box .eta-time {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #22c55e;
+      display: block;
+    }
+    .eta-box .eta-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 0.25rem;
+      display: block;
+    }
+    
+    /* First Aid Section */
+    .firstaid-section {
+      padding: 1.5rem 1rem;
+    }
+    .firstaid-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .firstaid-header h2 {
+      color: #e2e8f0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .firstaid-header p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+    .firstaid-container {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 1.5rem;
+    }
+    .firstaid-search {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .firstaid-search input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      background: #0d1120;
+      color: #e0e6f0;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+    }
+    .firstaid-search button {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .firstaid-categories {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .firstaid-category {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid #1e293b;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .firstaid-category.active,
+    .firstaid-category:hover {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: #22c55e;
+      color: #22c55e;
+    }
+    .firstaid-list {
+      display: grid;
+      gap: 1rem;
+    }
+    .firstaid-item {
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      padding: 1rem;
+      border-left: 4px solid #3b82f6;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .firstaid-item:hover {
+      background: rgba(59,130,246,0.1);
+      transform: translateX(4px);
+    }
+    .firstaid-item.critical {
+      border-left-color: #ef4444;
+    }
+    .firstaid-item h4 {
+      color: #e2e8f0;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .firstaid-item p {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+    .firstaid-steps {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: none;
+    }
+    .firstaid-item.expanded .firstaid-steps {
+      display: block;
+    }
+    .firstaid-step {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+      color: #e2e8f0;
+    }
+    .firstaid-step-number {
+      background: #22c55e;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .firstaid-warning {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid #f59e0b;
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #f59e0b;
+    }
+    .firstaid-warning i {
+      margin-right: 0.5rem;
+    }
+    .firstaid-call {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid #ef4444;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    .firstaid-call h4 {
+      color: #ef4444;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+    .firstaid-call p {
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+    .emergency-now-btn {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      width: 100%;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .emergency-now-btn:hover {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+    }
+    .emergency-now-btn:active {
+      transform: translateY(0);
+    }
+    
+    /* Back Button */
+    .back-btn {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      z-index: 1000;
+    }
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(59, 130, 246, 0.6);
+    }
+    .back-btn:active {
+      transform: translateY(0);
+    }
+    
+    /* Responsive */
+    @media (max-width: 767px) {
+      .status-banner h1 { font-size: 1.2rem; }
+      .status-banner p { font-size: 0.9rem; }
+      #map { height: 40vh; min-height: 280px; }
+      .back-btn { bottom: 1rem; right: 1rem; padding: 0.75rem 1.5rem; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Status Banner -->
+  <div class="status-banner">
+    <h1><i class="fas fa-ambulance"></i> Responders En Route</h1>
+    <p>Help is on the way. Stay calm and follow first aid instructions below.</p>
+    <div class="status-indicator">
+      <div class="pulse-dot"></div>
+      <span>Live Tracking Active</span>
+    </div>
+  </div>
+
+  <!-- Map Section -->
+  <div class="map-section">
+    <div class="map-card">
+      <div id="map"></div>
+      <div class="responder-info">
+        <h3><i class="fas fa-map-marker-alt"></i> Responder Location</h3>
+        <p>Our emergency response team has been dispatched to your location. You can track their progress on the map above. They are coming from the nearest available station.</p>
+        <div class="eta-box">
+          <span class="eta-time" id="etaTime">-- min</span>
+          <span class="eta-label">Estimated Time of Arrival</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- First Aid Section -->
+  <div class="firstaid-section">
+    <div class="firstaid-header">
+      <h2>🩹 First Aid While You Wait</h2>
+      <p>Follow these steps to help yourself or others until responders arrive.</p>
+    </div>
+    
+    <div class="firstaid-container">
+      <!-- Search -->
+      <div class="firstaid-search">
+        <input type="text" id="firstaidSearch" placeholder="Search first aid (e.g., bleeding, burn, CPR)..." oninput="filterFirstAid()">
+        <button onclick="filterFirstAid()">🔍</button>
+      </div>
+      
+      <!-- Categories -->
+      <div class="firstaid-categories">
+        <div class="firstaid-category active" onclick="filterFirstAidCategory('all', this)">All</div>
+        <div class="firstaid-category" onclick="filterFirstAidCategory('critical', this)">🔴 Critical</div>
+        <div class="firstaid-category" onclick="filterFirstAidCategory('injury', this)">🤕 Injuries</div>
+        <div class="firstaid-category" onclick="filterFirstAidCategory('medical', this)">🏥 Medical</div>
+        <div class="firstaid-category" onclick="filterFirstAidCategory('environmental', this)">🌡️ Environmental</div>
+      </div>
+      
+      <!-- First Aid List -->
+      <div class="firstaid-list" id="firstaidList"></div>
+    </div>
+  </div>
+
+  <!-- Back Button -->
+  <button class="back-btn" onclick="goBack()">
+    <i class="fas fa-arrow-left"></i> Back to Home
+  </button>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCmTEkHE__qW9Didb5JKJgLwFyK8jRECjI",
+      authDomain: "rescue-a28ef.firebaseapp.com",
+      databaseURL: "https://rescue-a28ef-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "rescue-a28ef",
+      storageBucket: "rescue-a28ef.firebasestorage.app",
+      messagingSenderId: "919837756686",
+      appId: "1:919837756686:web:1266c176a6d5890eb59b5f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Get alert ID from URL or localStorage
+    const alertId = new URLSearchParams(window.location.search).get('alert') || localStorage.getItem('lastAlertId');
+    
+    let map, userMarker, responderMarker, currentLocation = null;
+    let responderLocation = null;
+    let etaMinutes = 5; // Default ETA
+
+    // First Aid Data (Complete List)
+    const firstAidData = [
+      {
+        id: 'cpr',
+        title: 'CPR (Cardiopulmonary Resuscitation)',
+        icon: 'fa-heartbeat',
+        category: 'critical medical',
+        description: 'For someone who is unresponsive and not breathing normally.',
+        steps: [
+          'Check for responsiveness: Tap and shout "Are you okay?"',
+          'Call emergency services immediately or ask someone to call',
+          'Place person on their back on a firm surface',
+          'Place heel of one hand on center of chest, other hand on top',
+          'Push hard and fast: 100-120 compressions per minute, 2 inches deep',
+          'Allow chest to fully recoil between compressions',
+          'Continue until help arrives or person shows signs of life'
+        ],
+        warning: 'Only perform CPR if trained. If untrained, do hands-only CPR (compressions only).',
+        callEmergency: false
+      },
+      {
+        id: 'choking',
+        title: 'Choking (Heimlich Maneuver)',
+        icon: 'fa-wind',
+        category: 'critical',
+        description: 'For someone who cannot breathe, speak, or cough due to blocked airway.',
+        steps: [
+          'Ask: "Are you choking?" If they nod yes and can\'t speak, act immediately',
+          'Stand behind person, wrap arms around their waist',
+          'Make a fist with one hand, place thumb side against abdomen above navel',
+          'Grasp fist with other hand, give quick upward thrusts',
+          'Continue until object is dislodged or person becomes unconscious',
+          'If person becomes unconscious, begin CPR and call emergency services'
+        ],
+        warning: 'For pregnant or obese persons: Place hands on chest instead of abdomen.',
+        callEmergency: false
+      },
+      {
+        id: 'bleeding',
+        title: 'Severe Bleeding',
+        icon: 'fa-tint',
+        category: 'critical injury',
+        description: 'For heavy bleeding that won\'t stop with normal pressure.',
+        steps: [
+          'Call emergency services immediately',
+          'Have person lie down and keep calm',
+          'Apply direct pressure with clean cloth or gauze',
+          'If blood soaks through, add more layers - DO NOT remove original dressing',
+          'If possible, elevate injured area above heart level',
+          'If bleeding doesn\'t stop and is life-threatening, apply tourniquet 2-3 inches above wound',
+          'Note time tourniquet was applied and tell emergency responders'
+        ],
+        warning: 'Never remove embedded objects. Apply pressure around the object, not on it.',
+        callEmergency: false
+      },
+      {
+        id: 'burns',
+        title: 'Burns',
+        icon: 'fa-fire',
+        category: 'injury',
+        description: 'For thermal, chemical, or electrical burns.',
+        steps: [
+          'Stop the burning process: Remove from heat source',
+          'Cool the burn: Run cool (not cold) water over burn for 10-20 minutes',
+          'Remove jewelry or tight clothing near burn before swelling starts',
+          'Cover with sterile, non-stick bandage or clean cloth',
+          'Do NOT break blisters, apply ice, butter, or ointments',
+          'For chemical burns: Flush with water for 20+ minutes, remove contaminated clothing',
+          'Seek medical attention for: large burns, face/hands/feet/genitals burns, or signs of infection'
+        ],
+        warning: null,
+        callEmergency: false
+      },
+      {
+        id: 'fractures',
+        title: 'Fractures & Sprains',
+        icon: 'fa-bone',
+        category: 'injury',
+        description: 'For suspected broken bones or joint injuries.',
+        steps: [
+          'Keep person still and calm; do NOT move injured area',
+          'Call emergency services if: deformity, severe pain, inability to move, or injury to head/neck/back',
+          'Apply ice pack wrapped in cloth to reduce swelling (20 min on, 20 min off)',
+          'If trained and necessary, immobilize with splint (use rigid object + bandages)',
+          'Elevate injured area if possible to reduce swelling',
+          'Monitor for signs of shock: pale skin, rapid breathing, weakness'
+        ],
+        warning: 'Never try to straighten a deformed limb. Immobilize in position found.',
+        callEmergency: false
+      },
+      {
+        id: 'shock',
+        title: 'Shock',
+        icon: 'fa-heart',
+        category: 'critical medical',
+        description: 'For person showing signs of shock: pale/clammy skin, rapid weak pulse, confusion, fainting.',
+        steps: [
+          'Call emergency services immediately',
+          'Have person lie down on their back',
+          'Elevate legs 8-12 inches (unless head/neck/back/leg injuries suspected)',
+          'Keep person warm with blanket (not hot)',
+          'Loosen tight clothing',
+          'Do NOT give food or drink',
+          'Monitor breathing and be ready to perform CPR if needed'
+        ],
+        warning: 'Shock is life-threatening. Always seek immediate medical attention.',
+        callEmergency: false
+      },
+      {
+        id: 'allergic',
+        title: 'Severe Allergic Reaction (Anaphylaxis)',
+        icon: 'fa-allergies',
+        category: 'critical medical',
+        description: 'For symptoms: difficulty breathing, swelling of face/throat, hives, rapid pulse, dizziness.',
+        steps: [
+          'Call emergency services immediately',
+          'Ask if person has epinephrine auto-injector (EpiPen)',
+          'If yes, help them use it: Remove safety cap, press firmly against outer thigh, hold for 3 seconds',
+          'Have person lie down with legs elevated (unless breathing is easier sitting up)',
+          'Loosen tight clothing, cover with blanket',
+          'Do NOT give oral medications if person is having trouble breathing',
+          'If no improvement in 5-15 minutes and second auto-injector available, administer second dose'
+        ],
+        warning: 'Anaphylaxis can be fatal. Even if symptoms improve, person MUST go to hospital.',
+        callEmergency: false
+      },
+      {
+        id: 'heart-attack',
+        title: 'Heart Attack Symptoms',
+        icon: 'fa-heart-broken',
+        category: 'critical medical',
+        description: 'For symptoms: chest pain/pressure, pain in arm/jaw/back, shortness of breath, nausea, cold sweat.',
+        steps: [
+          'Call emergency services IMMEDIATELY - do not wait',
+          'Have person stop all activity and rest in comfortable position (usually sitting)',
+          'Loosen tight clothing',
+          'Ask if person takes heart medication (nitroglycerin) and help them take it if prescribed',
+          'If person is not allergic and has no bleeding disorder, give 1 adult aspirin (325mg) to chew',
+          'Monitor breathing and be ready to perform CPR if person becomes unresponsive',
+          'Stay with person until help arrives'
+        ],
+        warning: 'Time is critical. Every minute counts - call emergency services immediately.',
+        callEmergency: false
+      },
+      {
+        id: 'stroke',
+        title: 'Stroke (Remember FAST)',
+        icon: 'fa-brain',
+        category: 'critical medical',
+        description: 'For symptoms: sudden numbness, confusion, trouble speaking, vision problems, severe headache.',
+        steps: [
+          'F - Face: Ask person to smile. Does one side droop?',
+          'A - Arms: Ask person to raise both arms. Does one drift downward?',
+          'S - Speech: Ask person to repeat simple phrase. Is speech slurred or strange?',
+          'T - Time: If ANY of these signs, call emergency services IMMEDIATELY',
+          'Note time symptoms first appeared - critical for treatment',
+          'Have person lie down with head slightly elevated',
+          'Do NOT give food, drink, or medications',
+          'Monitor breathing and be ready for CPR'
+        ],
+        warning: '"Time lost is brain lost." Stroke treatment is most effective within 3-4.5 hours of symptom onset.',
+        callEmergency: false
+      },
+      {
+        id: 'poisoning',
+        title: 'Poisoning',
+        icon: 'fa-flask',
+        category: 'medical',
+        description: 'For suspected ingestion, inhalation, or skin contact with poison.',
+        steps: [
+          'Call Poison Control immediately: 📞 1-800-222-1222 (US) or local emergency number',
+          'If person is unconscious, not breathing, or having seizures: Call emergency services immediately',
+          'For swallowed poison: Do NOT induce vomiting unless instructed by Poison Control',
+          'For inhaled poison: Move person to fresh air immediately',
+          'For skin contact: Remove contaminated clothing, rinse skin with water for 15-20 minutes',
+          'For eye contact: Rinse eyes with lukewarm water for 15-20 minutes, holding eyelids open',
+          'Have container or substance information ready for Poison Control'
+        ],
+        warning: 'Never give anything by mouth to an unconscious person.',
+        callEmergency: false
+      },
+      {
+        id: 'seizures',
+        title: 'Seizures',
+        icon: 'fa-bolt',
+        category: 'medical',
+        description: 'For someone having a seizure (convulsions, loss of consciousness).',
+        steps: [
+          'Stay calm and note time seizure starts',
+          'Keep person safe: Clear area of hard/sharp objects, place soft item under head',
+          'Turn person onto their side (recovery position) to keep airway clear',
+          'Loosen tight clothing around neck',
+          'Do NOT restrain person or put anything in their mouth',
+          'Stay with person until seizure ends and they are fully conscious',
+          'Call emergency services if: seizure lasts >5 minutes, person has repeated seizures, is injured, pregnant, or has diabetes, or if it\'s their first seizure'
+        ],
+        warning: 'Never put anything in the mouth of a person having a seizure. They cannot swallow their tongue.',
+        callEmergency: false
+      },
+      {
+        id: 'heat',
+        title: 'Heat Exhaustion / Heat Stroke',
+        icon: 'fa-temperature-high',
+        category: 'environmental',
+        description: 'For symptoms: heavy sweating, weakness, dizziness, nausea, headache, high body temperature.',
+        steps: [
+          'Move person to cool, shaded area immediately',
+          'Have person lie down and elevate legs slightly',
+          'Remove excess or tight clothing',
+          'Cool person: Apply cool wet cloths to head/neck/armpits/groin, fan air over them',
+          'If conscious and not nauseated, give small sips of cool water or sports drink',
+          'Monitor for signs of heat stroke: confusion, loss of consciousness, hot/dry skin, body temp >103°F (39.4°C)',
+          'If heat stroke suspected: Call emergency services immediately, continue cooling measures'
+        ],
+        warning: 'Heat stroke is a medical emergency. Can cause organ damage or death if not treated immediately.',
+        callEmergency: false
+      },
+      {
+        id: 'hypothermia',
+        title: 'Hypothermia',
+        icon: 'fa-snowflake',
+        category: 'environmental',
+        description: 'For symptoms: shivering, confusion, slurred speech, drowsiness, weak pulse, slow breathing.',
+        steps: [
+          'Move person to warm, dry place immediately',
+          'Remove wet clothing, replace with dry layers or blankets',
+          'Cover head and neck to prevent heat loss',
+          'If conscious and able to swallow, give warm (not hot) non-alcoholic, non-caffeinated drinks',
+          'Use skin-to-skin contact under dry blankets if needed',
+          'Do NOT rub or massage cold limbs - can cause dangerous heart rhythms',
+          'Handle person gently - rough movement can trigger cardiac arrest in severe hypothermia',
+          'Call emergency services for moderate to severe hypothermia'
+        ],
+        warning: 'Do NOT use direct heat (hot water, heating pads) - can cause burns or dangerous blood flow changes.',
+        callEmergency: false
+      },
+      {
+        id: 'wound-care',
+        title: 'Basic Wound Care',
+        icon: 'fa-band-aid',
+        category: 'injury',
+        description: 'For minor cuts, scrapes, and abrasions.',
+        steps: [
+          'Wash hands with soap and water or use hand sanitizer',
+          'Stop bleeding: Apply gentle pressure with clean cloth or gauze',
+          'Clean wound: Rinse with clean, running water. Use mild soap around (not in) wound',
+          'Remove debris: Use tweezers cleaned with alcohol to remove visible dirt',
+          'Apply antibiotic ointment if available and no allergy',
+          'Cover with sterile bandage or adhesive strip',
+          'Change dressing daily or when wet/dirty',
+          'Watch for infection: increased redness, swelling, warmth, pus, or fever'
+        ],
+        warning: 'Seek medical care for: Deep wounds, animal/human bites, puncture wounds, or signs of infection.',
+        callEmergency: false
+      }
+    ];
+
+    // Initialize Map
+    function initMap() {
+      // Default to Addis Ababa
+      map = L.map('map').setView([9.0192, 38.7525], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Get user location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            currentLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            
+            // Add user marker
+            userMarker = L.marker([currentLocation.lat, currentLocation.lng], {
+              icon: L.divIcon({
+                html: '<div style="background:#3b82f6; color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-size:1rem; border:3px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.3);">📍</div>',
+                className: '',
+                iconSize: [30, 30]
+              })
+            }).addTo(map).bindPopup('📍 Your Location').openPopup();
+
+            // Simulate responder coming from nearby hospital
+            responderLocation = {
+              lat: currentLocation.lat + 0.02,
+              lng: currentLocation.lng + 0.02
+            };
+
+            // Add responder marker
+            responderMarker = L.marker([responderLocation.lat, responderLocation.lng], {
+              icon: L.divIcon({
+                html: '<div style="background:#22c55e; color:white; border-radius:50%; width:35px; height:35px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; border:3px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.3); animation: pulse 1s infinite;">🚑</div>',
+                className: '',
+                iconSize: [35, 35]
+              })
+            }).addTo(map).bindPopup('🚑 Responder En Route');
+
+            // Animate responder moving towards user
+            animateResponder();
+
+            // Calculate ETA
+            calculateETA();
+
+            // Fit map to show both markers
+            const group = L.featureGroup([userMarker, responderMarker]);
+            map.fitBounds(group.getBounds(), { padding: [50, 50] });
+          },
+          (error) => {
+            console.error('Error getting location:', error);
+            // Use default location
+            useDefaultLocation();
+          }
+        );
+      } else {
+        useDefaultLocation();
+      }
+    }
+
+    function useDefaultLocation() {
+      currentLocation = { lat: 9.0192, lng: 38.7525 };
+      responderLocation = { lat: 9.0350, lng: 38.7615 };
+
+      userMarker = L.marker([currentLocation.lat, currentLocation.lng], {
+        icon: L.divIcon({
+          html: '<div style="background:#3b82f6; color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-size:1rem; border:3px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.3);">📍</div>',
+          className: '',
+          iconSize: [30, 30]
+        })
+      }).addTo(map).bindPopup('📍 Your Location');
+
+      responderMarker = L.marker([responderLocation.lat, responderLocation.lng], {
+        icon: L.divIcon({
+          html: '<div style="background:#22c55e; color:white; border-radius:50%; width:35px; height:35px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; border:3px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.3); animation: pulse 1s infinite;">🚑</div>',
+          className: '',
+          iconSize: [35, 35]
+        })
+      }).addTo(map).bindPopup('🚑 Responder En Route');
+
+      animateResponder();
+      calculateETA();
+    }
+
+    function animateResponder() {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 0.01;
+        if (progress >= 1) {
+          progress = 1;
+          clearInterval(interval);
+          document.getElementById('etaTime').textContent = 'Arrived!';
+        }
+
+        const newLat = responderLocation.lat + (currentLocation.lat - responderLocation.lat) * progress;
+        const newLng = responderLocation.lng + (currentLocation.lng - responderLocation.lng) * progress;
+
+        responderMarker.setLatLng([newLat, newLng]);
+
+        // Update ETA
+        const remainingMinutes = Math.round((1 - progress) * etaMinutes);
+        if (remainingMinutes > 0) {
+          document.getElementById('etaTime').textContent = `${remainingMinutes} min`;
+        }
+      }, 500);
+    }
+
+    function calculateETA() {
+      const R = 6371; // Earth's radius in km
+      const dLat = (currentLocation.lat - responderLocation.lat) * Math.PI / 180;
+      const dLng = (currentLocation.lng - responderLocation.lng) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(responderLocation.lat * Math.PI / 180) * Math.cos(currentLocation.lat * Math.PI / 180) *
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distance = R * c;
+
+      // Assume average speed of 40 km/h in city
+      etaMinutes = Math.round((distance / 40) * 60);
+      if (etaMinutes < 1) etaMinutes = 1;
+      if (etaMinutes > 30) etaMinutes = 30;
+
+      document.getElementById('etaTime').textContent = `${etaMinutes} min`;
+    }
+
+    // First Aid Functions
+    function renderFirstAidList(filter = 'all', category = 'all') {
+      const list = document.getElementById('firstaidList');
+      let filtered = firstAidData;
+
+      if (filter && filter !== 'all') {
+        const searchTerm = filter.toLowerCase();
+        filtered = filtered.filter(item =>
+          item.title.toLowerCase().includes(searchTerm) ||
+          item.description.toLowerCase().includes(searchTerm) ||
+          item.steps.some(step => step.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      if (category && category !== 'all') {
+        filtered = filtered.filter(item => item.category.includes(category));
+      }
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<p style="color:#64748b; text-align:center; padding:2rem;">No first aid procedures found. Try a different search.</p>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(item => `
+        <div class="firstaid-item ${item.category.includes('critical') ? 'critical' : ''}" data-category="${item.category}" onclick="toggleFirstAid(this)">
+          <h4><i class="fas ${item.icon}"></i> ${item.title}</h4>
+          <p>${item.description}</p>
+          <div class="firstaid-steps">
+            ${item.steps.map((step, index) => `
+              <div class="firstaid-step">
+                <span class="firstaid-step-number">${index + 1}</span>
+                ${step}
+              </div>
+            `).join('')}
+            ${item.warning ? `
+              <div class="firstaid-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>${item.warning}</strong>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleFirstAid(element) {
+      element.classList.toggle('expanded');
+    }
+
+    function filterFirstAid() {
+      const searchTerm = document.getElementById('firstaidSearch').value;
+      renderFirstAidList(searchTerm, getCurrentFirstAidCategory());
+    }
+
+    function filterFirstAidCategory(category, element) {
+      document.querySelectorAll('.firstaid-category').forEach(btn => btn.classList.remove('active'));
+      element.classList.add('active');
+      const searchTerm = document.getElementById('firstaidSearch').value;
+      renderFirstAidList(searchTerm, category);
+    }
+
+    function getCurrentFirstAidCategory() {
+      const activeBtn = document.querySelector('.firstaid-category.active');
+      if (!activeBtn) return 'all';
+      const onclick = activeBtn.getAttribute('onclick');
+      const match = onclick.match(/'([^']+)'/);
+      return match ? match[1] : 'all';
+    }
+
+    function goBack() {
+      window.location.href = 'senny.html';
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      renderFirstAidList();
+    });
+  </script>
+</body>
+</html>
